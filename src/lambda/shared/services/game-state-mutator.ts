@@ -6,7 +6,7 @@ import {
     updateState
 } from '../models/game-state';
 import { playerValidator } from './player-validator';
-import { processPlayerMove } from '../../tic-tac-toe/src/services/process-player-move';
+import { processPlayerMove } from '../../tic-tac-toe/services/process-player-move';
 import { Players, SessionStates, SquareStates } from '../types/game-state';
 
 export const createGame = async (

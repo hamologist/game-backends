@@ -3,6 +3,8 @@ import { Board, Players, SessionStates, SquareStates } from '../types/game-state
 import { documentClient } from './document-client';
 import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 
+const GAME_STATE_TABLE_NAME = process.env.GAME_STATE_TABLE_NAME;
+
 const createBoard = (): Board => {
     return [
         [SquareStates.Empty, SquareStates.Empty, SquareStates.Empty],
@@ -38,7 +40,7 @@ export const getGame = async (
 ): Promise<GameStateResult | null> => {
     const { Item: item } = await documentClient.send(
         new GetCommand({
-            TableName: 'gameState',
+            TableName: GAME_STATE_TABLE_NAME,
             Key: { 'id': gameStateId },
         })
     );
@@ -63,7 +65,7 @@ export const createGame = async (
 
     await documentClient.send(
         new PutCommand({
-            TableName: 'gameState',
+            TableName: GAME_STATE_TABLE_NAME,
             Item: {
                 id: gameStateId,
                 playerOne: playerId,
@@ -87,7 +89,7 @@ export const addPlayer = async (
 ): Promise<GameStateResult> => {
     const { Attributes: attributes } = await documentClient.send(
         new UpdateCommand({
-            TableName: 'gameState',
+            TableName: GAME_STATE_TABLE_NAME,
             Key: { id: gameStateId },
             UpdateExpression: 'set playerTwo = :p',
             ExpressionAttributeValues: {
@@ -106,7 +108,7 @@ export const updateState = async (
 ): Promise<GameStateResult> => {
     const { Attributes: attributes } = await documentClient.send(
         new UpdateCommand({
-            TableName: 'gameState',
+            TableName: GAME_STATE_TABLE_NAME,
             Key: { id: gameStateId },
             UpdateExpression: 'set #s = :s',
             ExpressionAttributeNames: {

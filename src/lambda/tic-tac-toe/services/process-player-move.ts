@@ -1,7 +1,7 @@
 import {
     GameStateResult
-} from '../../../shared/models/game-state';
-import { Players, SessionStates, SquareStates } from '../../../shared/types/game-state';
+} from '../../shared/models/game-state';
+import { Players, SessionStates, SquareStates } from '../../shared/types/game-state';
 
 export function processPlayerMove(
     {x, y,}: { x: number, y: number },
