@@ -4,13 +4,13 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
-import { ResourceStack, ResourceStackProps } from './resource-stack';
+import { Resource, ResourceStackProps } from './resource';
 
 export interface TicTacToeProps extends ResourceStackProps{
     playerTable: dynamodb.Table;
 }
 
-export class TicTacToeStack extends ResourceStack {
+export class TicTacToe extends Resource {
     public readonly gameStateTable: dynamodb.Table;
     public readonly getHandler: lambda.Function;
     public readonly joinGameHandler: lambda.Function;

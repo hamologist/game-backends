@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { GameBackendsStack } from '../lib/game-backends-stack';
+import { ProdStack } from '../lib/prod-stack';
+import { DevStack } from '../lib/dev-stack';
 
 const app = new cdk.App();
-new GameBackendsStack(app, 'GameBackendsStack', {
+
+new DevStack(app, 'GameBackends-Dev', {});
+
+new ProdStack(app, 'GameBackends-Prod', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

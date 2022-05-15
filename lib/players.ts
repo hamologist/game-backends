@@ -4,9 +4,9 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
-import { ResourceStack, ResourceStackProps } from './resource-stack';
+import { Resource, ResourceStackProps } from './resource';
 
-export class PlayersStack extends ResourceStack {
+export class Players extends Resource {
     public readonly playerTable: dynamodb.Table;
     public readonly createHandler: lambda.Function;
     public readonly getHandler: lambda.Function;

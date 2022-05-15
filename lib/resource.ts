@@ -6,7 +6,7 @@ export interface ResourceStackProps {
     restApi: apigateway.RestApi;
 }
 
-export abstract class ResourceStack extends Construct {
+export abstract class Resource extends Construct {
     protected readonly restApi: apigateway.RestApi;
     protected defaultLambdaGeneratorProps: Omit<lambda.FunctionProps, 'handler'>;
 
