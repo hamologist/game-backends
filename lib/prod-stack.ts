@@ -9,7 +9,9 @@ import { GameBackends } from './game-backends';
 export class ProdStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    const gameBackends = new GameBackends(this, 'GameBackends');
+    const gameBackends = new GameBackends(this, 'GameBackends', {
+      scope: 'prod',
+    });
     const rootDomain = ssm.StringParameter.valueFromLookup(this, '/game-backends/prod/root-domain');
     const certificate = certificatemanager.Certificate.fromCertificateArn(
         this,

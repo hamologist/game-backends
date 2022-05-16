@@ -7,6 +7,9 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "local-synth": "npx cdk synth GameBackends-Dev --no-staging > local-template.yaml",
+    "local": "sam local start-api -p 3000 -t ./local-template.yaml -n env.json",
+    "debug": "sam local start-api -p 3001 -d 9229 -t ./local-template.yaml -n env.json",
     "test": "jest",
     "cdk": "cdk"
   },

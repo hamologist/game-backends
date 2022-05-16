@@ -10,6 +10,7 @@ export class DevStack extends Stack {
             apiDeployOptions: {
                 stageName: 'dev',
             },
+            scope: 'dev',
         });
     }
 }

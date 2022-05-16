@@ -5,13 +5,14 @@ import { Players } from './players';
 import { TicTacToe } from './tic-tac-toe';
 
 export interface GameBackendsProps {
-  apiDeployOptions: apigateway.StageOptions | undefined;
+  scope: string;
+  apiDeployOptions?: apigateway.StageOptions;
 }
 
 export class GameBackends extends Construct {
   public restApi: apigateway.RestApi;
 
-  constructor(scope: Construct, id: string, props?: GameBackendsProps) {
+  constructor(scope: Construct, id: string, props: GameBackendsProps) {
     super(scope, id);
 
     this.restApi = new apigateway.RestApi(this,  'Api', {
@@ -33,12 +34,14 @@ export class GameBackends extends Construct {
     });
 
     const playersStack = new Players(this, 'PlayersStack', {
-      restApi: this.restApi
+      restApi: this.restApi,
+      scope: props.scope,
     });
 
     new TicTacToe(this, 'TicTacToeStack', {
       restApi: this.restApi,
       playerTable: playersStack.playerTable,
+      scope: props.scope,
     })
 
     new CfnOutput(this, 'ApiUrl', { value: this.restApi.url });

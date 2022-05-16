@@ -16,6 +16,7 @@ export class Players extends Resource {
         super(scope, id, props);
 
         this.playerTable = new dynamodb.Table(this, 'PlayerTable', {
+            tableName: `${props.scope}-game-backends-player`,
             readCapacity: 1,
             writeCapacity: 1,
             partitionKey: {
@@ -23,7 +24,6 @@ export class Players extends Resource {
                 name: 'id'
             },
         });
-
 
         this.defaultLambdaGeneratorProps = {
             ...this.defaultLambdaGeneratorProps,

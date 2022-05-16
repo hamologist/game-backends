@@ -1,9 +1,11 @@
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { Duration } from 'aws-cdk-lib';
 
 export interface ResourceStackProps {
     restApi: apigateway.RestApi;
+    scope: string;
 }
 
 export abstract class Resource extends Construct {
@@ -15,6 +17,9 @@ export abstract class Resource extends Construct {
 
         this.restApi = props.restApi;
         this.defaultLambdaGeneratorProps = {
+            timeout: Duration.seconds(5),
+            memorySize: 256,
+            architecture: lambda.Architecture.ARM_64,
             runtime: lambda.Runtime.NODEJS_14_X,
             code: lambda.Code.fromAsset('src/lambda', { exclude: ['*.ts'] }),
         };

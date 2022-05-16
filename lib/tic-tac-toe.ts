@@ -21,6 +21,7 @@ export class TicTacToe extends Resource {
         super(scope, id, props);
 
         this.gameStateTable = new dynamodb.Table(this, 'GameStateTable', {
+            tableName: `${props.scope}-game-backends-game-state`,
             readCapacity: 1,
             writeCapacity: 1,
             partitionKey: {
