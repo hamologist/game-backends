@@ -5,6 +5,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
 import { Resource, ResourceStackProps } from './resource';
+import { HandlerGenerator } from './helpers/handler-generator';
 
 export class Players extends Resource {
     public readonly playerTable: dynamodb.Table;
@@ -21,29 +22,28 @@ export class Players extends Resource {
             writeCapacity: 1,
             partitionKey: {
                 type: AttributeType.STRING,
-                name: 'id'
+                name: 'id',
             },
         });
 
-        this.defaultLambdaGeneratorProps = {
-            ...this.defaultLambdaGeneratorProps,
-            ...{
+        const handlerGenerator = new HandlerGenerator(this, 'PlayersHandlerGenerator', {
+            defaultLambdaGeneratorProps: {
                 environment: {
                     PLAYER_TABLE_NAME: this.playerTable.tableName,
                 },
             },
-        }
-        this.createHandler = this.handlerGenerator('PlayersCreateHandler', {
+        });
+        this.createHandler = handlerGenerator.generate('PlayersCreateHandler', {
             handler: 'players/create.handler',
         });
         this.playerTable.grantWriteData(this.createHandler);
 
-        this.getHandler = this.handlerGenerator('PlayersGetHandler', {
+        this.getHandler = handlerGenerator.generate('PlayersGetHandler', {
             handler: 'players/get.handler',
         });
         this.playerTable.grantReadData(this.getHandler);
 
-        this.validateHandler = this.handlerGenerator('PlayersValidateHandler', {
+        this.validateHandler = handlerGenerator.generate('PlayersValidateHandler', {
             handler: 'players/validate.handler',
         })
         this.playerTable.grantReadData(this.validateHandler);

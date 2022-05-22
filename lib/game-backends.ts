@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Players } from './players';
 import { TicTacToe } from './tic-tac-toe';
+import { WebSocketApi } from './web-socket-api';
 
 export interface GameBackendsProps {
   scope: string;
@@ -10,7 +11,10 @@ export interface GameBackendsProps {
 }
 
 export class GameBackends extends Construct {
-  public restApi: apigateway.RestApi;
+  public readonly restApi: apigateway.RestApi;
+  public readonly webSocketApi: WebSocketApi;
+  public readonly players: Players;
+  public readonly ticTacToe: TicTacToe;
 
   constructor(scope: Construct, id: string, props: GameBackendsProps) {
     super(scope, id);
@@ -33,16 +37,21 @@ export class GameBackends extends Construct {
       deployOptions: props?.apiDeployOptions,
     });
 
-    const playersStack = new Players(this, 'PlayersStack', {
+    this.players = new Players(this, 'PlayersStack', {
       restApi: this.restApi,
       scope: props.scope,
     });
 
-    new TicTacToe(this, 'TicTacToeStack', {
+    this.ticTacToe = new TicTacToe(this, 'TicTacToeStack', {
       restApi: this.restApi,
-      playerTable: playersStack.playerTable,
+      playerTable: this.players.playerTable,
       scope: props.scope,
-    })
+    });
+
+    this.webSocketApi = new WebSocketApi(this, 'WebSocketApiStack', {
+      scope: props.scope,
+      playerTable: this.players.playerTable,
+    });
 
     new CfnOutput(this, 'ApiUrl', { value: this.restApi.url });
   }

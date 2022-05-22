@@ -5,6 +5,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
 import { Resource, ResourceStackProps } from './resource';
+import { HandlerGenerator } from './helpers/handler-generator';
 
 export interface TicTacToeProps extends ResourceStackProps{
     playerTable: dynamodb.Table;
@@ -26,37 +27,36 @@ export class TicTacToe extends Resource {
             writeCapacity: 1,
             partitionKey: {
                 type: AttributeType.STRING,
-                name: 'id'
+                name: 'id',
             },
         });
 
-        this.defaultLambdaGeneratorProps = {
-            ...this.defaultLambdaGeneratorProps,
-            ...{
+        const handlerGenerator = new HandlerGenerator(this, 'TicTacToeHandlerGenerator', {
+            defaultLambdaGeneratorProps: {
                 environment: {
                     GAME_STATE_TABLE_NAME: this.gameStateTable.tableName,
                     PLAYER_TABLE_NAME: props.playerTable.tableName,
                 },
             },
-        }
-        this.getHandler = this.handlerGenerator('TicTacToeGetHandler', {
+        });
+        this.getHandler = handlerGenerator.generate('TicTacToeGetHandler', {
             handler: 'tic-tac-toe/get.handler',
         });
         this.gameStateTable.grantReadData(this.getHandler);
 
-        this.joinGameHandler = this.handlerGenerator('TicTacToeJoinGameHandler', {
+        this.joinGameHandler = handlerGenerator.generate('TicTacToeJoinGameHandler', {
             handler: 'tic-tac-toe/join-game.handler',
         });
         this.gameStateTable.grantReadWriteData(this.joinGameHandler);
         props.playerTable.grantReadData(this.joinGameHandler);
 
-        this.makeMoveHandler = this.handlerGenerator('TicTacToeMakeMoveHandler', {
+        this.makeMoveHandler = handlerGenerator.generate('TicTacToeMakeMoveHandler', {
             handler: 'tic-tac-toe/make-move.handler',
         })
         this.gameStateTable.grantReadWriteData(this.makeMoveHandler);
         props.playerTable.grantReadData(this.makeMoveHandler);
 
-        this.newGameHandler = this.handlerGenerator('TicTacToeNewGameHandler', {
+        this.newGameHandler = handlerGenerator.generate('TicTacToeNewGameHandler', {
             handler: 'tic-tac-toe/new-game.handler',
         })
         this.gameStateTable.grantReadWriteData(this.newGameHandler);

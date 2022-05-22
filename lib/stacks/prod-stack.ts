@@ -4,7 +4,7 @@ import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import { GameBackends } from './game-backends';
+import { GameBackends } from '../game-backends';
 
 export class ProdStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
