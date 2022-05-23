@@ -34,7 +34,7 @@ export class Players extends Resource {
             },
         });
         this.createHandler = handlerGenerator.generate('PlayersCreateHandler', {
-            handler: 'players/create.handler',
+            handler: 'players/create.restHandler',
         });
         this.playerTable.grantWriteData(this.createHandler);
 

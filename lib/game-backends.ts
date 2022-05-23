@@ -50,7 +50,8 @@ export class GameBackends extends Construct {
 
     this.webSocketApi = new WebSocketApi(this, 'WebSocketApiStack', {
       scope: props.scope,
-      playerTable: this.players.playerTable,
+      players: this.players,
+      ticTacToe: this.ticTacToe,
     });
 
     new CfnOutput(this, 'ApiUrl', { value: this.restApi.url });

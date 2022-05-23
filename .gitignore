@@ -10,3 +10,7 @@ local-template.yaml
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+.aws-sam
+
+**/aws-toolkit-ts-output
+**/aws-toolkit-tsconfig.json

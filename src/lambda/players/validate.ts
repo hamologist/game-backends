@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { eventBodyProcessor } from '../shared/services/event-processor';
+import { restEventBodyProcessor } from '../shared/services/event-processor';
 import {
     createErrorResponse,
     createSuccessResponse
@@ -11,7 +11,7 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
     let body: { playerId: string, playerSecret: string };
     try {
-        body = eventBodyProcessor<typeof body>({
+        body = restEventBodyProcessor<typeof body>({
             type: 'object',
             properties: {
                 playerId: { type: 'string' },

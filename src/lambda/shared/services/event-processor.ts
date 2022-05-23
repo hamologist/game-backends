@@ -1,4 +1,4 @@
-import AJV, { ErrorObject, JSONSchemaType } from 'ajv';
+import AJV, { JSONSchemaType } from 'ajv';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
 const ajv = new AJV();
@@ -20,6 +20,8 @@ const eventProcessor = <T>(
     const validate = ajv.compile(schema);
 
     if (!validate(payload)) {
+        console.log('Invalid payload');
+        console.log(validate.errors);
         throw new EventProcessorError(validate.errors!.join(', '));
     }
 
@@ -51,7 +53,7 @@ export class EventProcessorError extends Error {
 /**
  * @throws {EventProcessorError}
  */
-export function eventBodyProcessor <T>(
+export function restEventBodyProcessor <T>(
     schema: JSONSchemaType<T>,
     { body }: APIGatewayProxyEvent,
 ): T {
@@ -61,6 +63,31 @@ export function eventBodyProcessor <T>(
         } catch (err) {
             throw new EventProcessorError(`JSON parse error: ${err}`);
         }
+    }
+
+    return eventProcessor(schema, body, preProcessor)
+}
+
+/**
+ * @throws {EventProcessorError}
+ */
+export function webSocketEventBodyProcessor <T>(
+    schema: JSONSchemaType<T>,
+    { body }: APIGatewayProxyEvent,
+): T {
+    const preProcessor = (payload: any) => {
+        let messagePayload;
+
+        try {
+            messagePayload = JSON.parse(payload).payload;
+        } catch (err) {
+            throw new EventProcessorError(`JSON parse error: ${err}`);
+        }
+        if (messagePayload === undefined) {
+            throw new EventProcessorError(`WebSocket message is missing required field, "payload"`);
+        }
+
+        return messagePayload
     }
 
     return eventProcessor(schema, body, preProcessor)
