@@ -50,10 +50,15 @@ export class EventProcessorError extends Error {
     }
 }
 
+export type EventBodyProcessor = <T>(
+    schema: JSONSchemaType<T>,
+    { body }: APIGatewayProxyEvent,
+) => T;
+
 /**
  * @throws {EventProcessorError}
  */
-export function restEventBodyProcessor <T>(
+export const restEventBodyProcessor: EventBodyProcessor = function <T>(
     schema: JSONSchemaType<T>,
     { body }: APIGatewayProxyEvent,
 ): T {
@@ -71,7 +76,7 @@ export function restEventBodyProcessor <T>(
 /**
  * @throws {EventProcessorError}
  */
-export function webSocketEventBodyProcessor <T>(
+export const webSocketEventBodyProcessor: EventBodyProcessor = function <T>(
     schema: JSONSchemaType<T>,
     { body }: APIGatewayProxyEvent,
 ): T {

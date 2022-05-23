@@ -34,7 +34,7 @@ export class Players extends Resource {
             },
         });
         this.createHandler = handlerGenerator.generate('PlayersCreateHandler', {
-            handler: 'players/create.restHandler',
+            handler: 'players/create.apiHandler',
         });
         this.playerTable.grantWriteData(this.createHandler);
 
@@ -44,7 +44,7 @@ export class Players extends Resource {
         this.playerTable.grantReadData(this.getHandler);
 
         this.validateHandler = handlerGenerator.generate('PlayersValidateHandler', {
-            handler: 'players/validate.handler',
+            handler: 'players/validate.apiHandler',
         })
         this.playerTable.grantReadData(this.validateHandler);
 

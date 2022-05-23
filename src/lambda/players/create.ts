@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import {
+    EventBodyProcessor,
     restEventBodyProcessor,
     webSocketEventBodyProcessor
 } from '../shared/services/event-processor';
@@ -12,7 +13,7 @@ import {
 } from '../shared/utilities/response-helpers';
 import { TextEncoder } from 'util';
 
-export const restHandler = async (
+export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
@@ -43,7 +44,7 @@ export const webSocketHandler = async (
 };
 
 const handler = async (
-    eventBodyProcessor: typeof restEventBodyProcessor | typeof webSocketEventBodyProcessor,
+    eventBodyProcessor: EventBodyProcessor,
     event: APIGatewayProxyEvent,
 ): Promise<{ playerId: string, playerSecret: string }> => {
     let body: { username: string };
