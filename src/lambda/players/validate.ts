@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
-    EventBodyProcessor,
-    restEventBodyProcessor,
-    webSocketEventBodyProcessor
+    EventTransformer,
+    restEventTransformer,
+    webSocketEventTransformer
 } from '../shared/services/event-processor';
 import {
     createErrorResponse,
@@ -19,7 +19,7 @@ export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(await handler(restEventBodyProcessor, event));
+        return createSuccessResponse(await handler(restEventTransformer, event));
     } catch(err) {
         return createErrorResponse(err);
     }
@@ -33,7 +33,7 @@ export const webSocketHandler = async (
     });
 
     try {
-        const result = await handler(webSocketEventBodyProcessor, event);
+        const result = await handler(webSocketEventTransformer, event);
         console.log('result', result);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
@@ -49,11 +49,11 @@ export const webSocketHandler = async (
 };
 
 const handler = async (
-    eventBodyProcessor: EventBodyProcessor,
+    eventTransformer: EventTransformer,
     event: APIGatewayProxyEvent,
 ): Promise<string> => {
     let body: { playerId: string, playerSecret: string };
-    body = eventBodyProcessor<typeof body>({
+    body = eventTransformer<typeof body>({
         type: 'object',
         properties: {
             playerId: { type: 'string' },

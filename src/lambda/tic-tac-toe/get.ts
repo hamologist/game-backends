@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { eventPathProcessor } from '../shared/services/event-processor';
+import { eventPathTransformer } from '../shared/services/event-processor';
 import {
     createErrorResponse,
     createSuccessResponse,
@@ -12,7 +12,7 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
     let body: { id: string };
     try {
-        body = eventPathProcessor<typeof body>({
+        body = eventPathTransformer<typeof body>({
             type: 'object',
             properties: {
                 id: { type: 'string' }

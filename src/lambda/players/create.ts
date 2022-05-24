@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import {
-    EventBodyProcessor,
-    restEventBodyProcessor,
-    webSocketEventBodyProcessor
+    EventTransformer,
+    restEventTransformer,
+    webSocketEventTransformer
 } from '../shared/services/event-processor';
 import { createPlayer } from '../shared/models/player';
 import {
@@ -17,7 +17,7 @@ export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(SUCCESS_MESSAGE, await handler(restEventBodyProcessor, event));
+        return createSuccessResponse(SUCCESS_MESSAGE, await handler(restEventTransformer, event));
     } catch(err) {
         return createErrorResponse(err);
     }
@@ -31,7 +31,7 @@ export const webSocketHandler = async (
     });
 
     try {
-        const result = await handler(webSocketEventBodyProcessor, event);
+        const result = await handler(webSocketEventTransformer, event);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
             Data: new TextEncoder().encode(JSON.stringify(result)),
@@ -44,11 +44,11 @@ export const webSocketHandler = async (
 };
 
 const handler = async (
-    eventBodyProcessor: EventBodyProcessor,
+    eventTransformer: EventTransformer,
     event: APIGatewayProxyEvent,
 ): Promise<{ playerId: string, playerSecret: string }> => {
     let body: { username: string };
-    body = eventBodyProcessor<typeof body>({
+    body = eventTransformer<typeof body>({
         type: 'object',
         properties: {
             username: { type: 'string' }

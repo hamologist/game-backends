@@ -50,15 +50,15 @@ export class EventProcessorError extends Error {
     }
 }
 
-export type EventBodyProcessor = <T>(
+export type EventTransformer = <T>(
     schema: JSONSchemaType<T>,
-    { body }: APIGatewayProxyEvent,
+    event: APIGatewayProxyEvent,
 ) => T;
 
 /**
  * @throws {EventProcessorError}
  */
-export const restEventBodyProcessor: EventBodyProcessor = function <T>(
+export const restEventTransformer: EventTransformer = function <T>(
     schema: JSONSchemaType<T>,
     { body }: APIGatewayProxyEvent,
 ): T {
@@ -76,7 +76,7 @@ export const restEventBodyProcessor: EventBodyProcessor = function <T>(
 /**
  * @throws {EventProcessorError}
  */
-export const webSocketEventBodyProcessor: EventBodyProcessor = function <T>(
+export const webSocketEventTransformer: EventTransformer = function <T>(
     schema: JSONSchemaType<T>,
     { body }: APIGatewayProxyEvent,
 ): T {
@@ -98,7 +98,7 @@ export const webSocketEventBodyProcessor: EventBodyProcessor = function <T>(
     return eventProcessor(schema, body, preProcessor)
 }
 
-export function eventPathProcessor <T>(
+export const eventPathTransformer: EventTransformer = function <T>(
     schema: JSONSchemaType<T>,
     { pathParameters }: APIGatewayProxyEvent,
 ): T {

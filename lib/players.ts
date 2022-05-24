@@ -39,7 +39,7 @@ export class Players extends Resource {
         this.playerTable.grantWriteData(this.createHandler);
 
         this.getHandler = handlerGenerator.generate('PlayersGetHandler', {
-            handler: 'players/get.handler',
+            handler: 'players/get.apiHandler',
         });
         this.playerTable.grantReadData(this.getHandler);
 

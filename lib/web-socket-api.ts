@@ -21,6 +21,7 @@ export class WebSocketApi extends Construct {
     public readonly disconnectHandler: lambda.Function;
     public readonly playersCreateHandler: lambda.Function;
     public readonly playersValidateHandler: lambda.Function;
+    public readonly playersGetHandler: lambda.Function;
 
     constructor(scope: Construct, id: string, props: WebSocketApiProps) {
         super(scope, id);
@@ -79,5 +80,14 @@ export class WebSocketApi extends Construct {
             integration: new WebSocketLambdaIntegration('PlayersValidateWebSocketIntegration', this.playersValidateHandler)
         });
         this.api.grantManageConnections(this.playersValidateHandler);
+
+        this.playersGetHandler = handlerGenerator.generate('PlayersGetWebSocketHandler', {
+            handler: 'players/get.webSocketHandler',
+        });
+        props.players.playerTable.grantReadData(this.playersGetHandler);
+        this.api.addRoute('getPlayer', {
+            integration: new WebSocketLambdaIntegration('PlayersGetWebSocketIntegration', this.playersGetHandler)
+        });
+        this.api.grantManageConnections(this.playersGetHandler);
     }
 }
