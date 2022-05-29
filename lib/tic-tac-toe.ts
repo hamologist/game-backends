@@ -57,7 +57,7 @@ export class TicTacToe extends Resource {
         props.playerTable.grantReadData(this.makeMoveHandler);
 
         this.newGameHandler = handlerGenerator.generate('TicTacToeNewGameHandler', {
-            handler: 'tic-tac-toe/new-game.handler',
+            handler: 'tic-tac-toe/new-game.apiHandler',
         })
         this.gameStateTable.grantReadWriteData(this.newGameHandler);
         props.playerTable.grantReadData(this.newGameHandler);

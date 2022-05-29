@@ -1,33 +1,66 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { restEventTransformer } from '../shared/services/event-processor';
+import {
+    EventTransformer,
+    restEventTransformer,
+    webSocketEventTransformer
+} from '../shared/services/event-processor';
 import {
     createErrorResponse,
     createSuccessResponse, SUCCESS_MESSAGE
 } from '../shared/utilities/response-helpers';
 import { createGame } from '../shared/services/game-state-mutator';
+import {
+    ApiGatewayManagementApiClient,
+    PostToConnectionCommand
+} from '@aws-sdk/client-apigatewaymanagementapi';
+import { TextEncoder } from 'util';
 
-export const handler = async (
+export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-    let body: { playerId: string, playerSecret: string };
     try {
-        body = restEventTransformer<typeof body>({
-            type: 'object',
-            properties: {
-                playerId: { type: 'string' },
-                playerSecret: { type: 'string' },
-            },
-            required: ['playerId', 'playerSecret'],
-            additionalProperties: false
-        }, event);
-    } catch (err) {
+        return createSuccessResponse(SUCCESS_MESSAGE, await handler(restEventTransformer, event));
+    } catch(err) {
         return createErrorResponse(err);
     }
+}
+
+export const webSocketHandler = async (
+    event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+    const client = new ApiGatewayManagementApiClient({
+        endpoint: `https://${event.requestContext.domainName}/${event.requestContext.stage}`,
+    });
 
     try {
-        const { id: gameStateId } = await createGame(body.playerId, body.playerSecret);
-        return createSuccessResponse(SUCCESS_MESSAGE, { gameStateId })
-    } catch (err) {
+        const result = await handler(webSocketEventTransformer, event);
+        await client.send(new PostToConnectionCommand({
+            ConnectionId: event.requestContext.connectionId,
+            Data: new TextEncoder().encode(JSON.stringify(result)),
+        }));
+
+        return createSuccessResponse(SUCCESS_MESSAGE, result);
+    } catch(err) {
+        console.log('Error', err);
         return createErrorResponse(err);
     }
+}
+
+const handler = async (
+    eventTransformer: EventTransformer,
+    event: APIGatewayProxyEvent,
+): Promise<{ gameStateId: string }> => {
+    let body: { playerId: string, playerSecret: string };
+    body = eventTransformer<typeof body>({
+        type: 'object',
+        properties: {
+            playerId: { type: 'string' },
+            playerSecret: { type: 'string' },
+        },
+        required: ['playerId', 'playerSecret'],
+        additionalProperties: false
+    }, event);
+
+    const { id: gameStateId } = await createGame(body.playerId, body.playerSecret);
+    return { gameStateId }
 }
