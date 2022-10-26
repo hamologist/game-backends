@@ -7,9 +7,10 @@ import { WebSocketLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integratio
 import { HandlerGenerator } from './helpers/handler-generator';
 import { Players } from './players';
 import { TicTacToe } from './tic-tac-toe';
+import { BuildContext } from './helpers/build-context';
 
 export interface WebSocketApiProps {
-    scope: string;
+    buildContext: BuildContext;
     players: Players;
     ticTacToe: TicTacToe;
 }
@@ -27,10 +28,8 @@ export class WebSocketApi extends Construct {
     constructor(scope: Construct, id: string, props: WebSocketApiProps) {
         super(scope, id);
 
-        this.connectionTable = new dynamodb.Table(this, 'WebsocketConnectionTable', {
-            tableName: `${props.scope}-game-backends-connection-table`,
-            readCapacity: 1,
-            writeCapacity: 1,
+        this.connectionTable = props.buildContext.tableGenerator.generate('WebsocketConnectionTable', {
+            tableName: `${props.buildContext.stageContext.stageToString()}-game-backends-connection-table`,
             partitionKey: {
                 type: AttributeType.STRING,
                 name: 'id',

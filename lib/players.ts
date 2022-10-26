@@ -4,22 +4,24 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
-import { Resource, ResourceStackProps } from './resource';
 import { HandlerGenerator } from './helpers/handler-generator';
+import { BuildContext } from './helpers/build-context';
 
-export class Players extends Resource {
+export interface PlayersProps {
+   buildContext: BuildContext;
+}
+
+export class Players extends Construct {
     public readonly playerTable: dynamodb.Table;
     public readonly createHandler: lambda.Function;
     public readonly getHandler: lambda.Function;
     public readonly validateHandler: lambda.Function;
 
-    constructor(scope: Construct, id: string, props: ResourceStackProps) {
-        super(scope, id, props);
+    constructor(scope: Construct, id: string, props: PlayersProps) {
+        super(scope, id);
 
-        this.playerTable = new dynamodb.Table(this, 'PlayerTable', {
-            tableName: `${props.scope}-game-backends-player`,
-            readCapacity: 1,
-            writeCapacity: 1,
+        this.playerTable = props.buildContext.tableGenerator.generate('PlayerTable', {
+            tableName: `${props.buildContext.stageContext.stageToString()}-game-backends-player`,
             partitionKey: {
                 type: AttributeType.STRING,
                 name: 'id',
@@ -48,7 +50,7 @@ export class Players extends Resource {
         })
         this.playerTable.grantReadData(this.validateHandler);
 
-        const playerResource = props.restApi.root.addResource('player');
+        const playerResource = props.buildContext.restApi.root.addResource('player');
         playerResource.addMethod(
             'POST',
             new apigateway.LambdaIntegration(this.createHandler),

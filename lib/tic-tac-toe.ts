@@ -4,14 +4,15 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
-import { Resource, ResourceStackProps } from './resource';
 import { HandlerGenerator } from './helpers/handler-generator';
+import { BuildContext } from './helpers/build-context';
 
-export interface TicTacToeProps extends ResourceStackProps{
+export interface TicTacToeProps {
+    buildContext: BuildContext;
     playerTable: dynamodb.Table;
 }
 
-export class TicTacToe extends Resource {
+export class TicTacToe extends Construct {
     public readonly gameStateTable: dynamodb.Table;
     public readonly getHandler: lambda.Function;
     public readonly joinGameHandler: lambda.Function;
@@ -19,12 +20,10 @@ export class TicTacToe extends Resource {
     public readonly newGameHandler: lambda.Function;
 
     constructor(scope: Construct, id: string, props: TicTacToeProps) {
-        super(scope, id, props);
+        super(scope, id);
 
-        this.gameStateTable = new dynamodb.Table(this, 'GameStateTable', {
-            tableName: `${props.scope}-game-backends-game-state`,
-            readCapacity: 1,
-            writeCapacity: 1,
+        this.gameStateTable = props.buildContext.tableGenerator.generate('GameStateTable', {
+            tableName: `${props.buildContext.stageContext.stageToString()}-game-backends-game-state`,
             partitionKey: {
                 type: AttributeType.STRING,
                 name: 'id',
@@ -62,7 +61,7 @@ export class TicTacToe extends Resource {
         this.gameStateTable.grantReadWriteData(this.newGameHandler);
         props.playerTable.grantReadData(this.newGameHandler);
 
-        const ticTacToeResource = props.restApi.root.addResource('tic-tac-toe');
+        const ticTacToeResource = props.buildContext.restApi.root.addResource('tic-tac-toe');
         const byIdResource = ticTacToeResource.addResource('{id}');
         byIdResource.addMethod(
             'GET',

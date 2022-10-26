@@ -1,24 +1,20 @@
 import { Construct } from 'constructs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { BillingMode } from 'aws-cdk-lib/aws-dynamodb';
-
-enum Stage {
-    Dev,
-    Prod,
-}
+import { Stage, StageContext } from './stage-context';
 
 export interface TableGeneratorProps {
-    stage: Stage;
+    stageContext: StageContext;
 }
 
 export class TableGenerator extends Construct {
     protected scope: Construct;
-    protected stage: Stage;
+    protected stageContext: StageContext;
 
     public constructor(scope: Construct, id: string, props: TableGeneratorProps) {
         super(scope, id);
 
-        this.stage = props.stage;
+        this.stageContext = props.stageContext;
     }
 
     protected generateProdTableProps(props: dynamodb.TableProps): dynamodb.TableProps {
@@ -39,7 +35,7 @@ export class TableGenerator extends Construct {
 
     public generate(id: string, props: dynamodb.TableProps): dynamodb.Table {
         let fullProps: dynamodb.TableProps;
-        if (this.stage === Stage.Prod) {
+        if (this.stageContext.stage === Stage.Prod) {
             fullProps = this.generateProdTableProps(props);
         } else {
             fullProps = this.generateDevTableProps(props);
