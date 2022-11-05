@@ -24,6 +24,7 @@ export class WebSocketApi extends Construct {
     public readonly playersValidateHandler: lambda.Function;
     public readonly playersGetHandler: lambda.Function;
     public readonly ticTacToeNewGameHandler: lambda.Function;
+    public readonly ticTacToeGetHandler: lambda.Function;
 
     constructor(scope: Construct, id: string, props: WebSocketApiProps) {
         super(scope, id);
@@ -91,14 +92,23 @@ export class WebSocketApi extends Construct {
         });
         this.api.grantManageConnections(this.playersGetHandler);
 
-        this.ticTacToeNewGameHandler = handlerGenerator.generate('TicTacToeNewGameHandler', {
+        this.ticTacToeNewGameHandler = handlerGenerator.generate('TicTacToeNewGameWebSocketHandler', {
             handler: 'tic-tac-toe/new-game.webSocketHandler',
         });
         props.ticTacToe.gameStateTable.grantReadWriteData(this.ticTacToeNewGameHandler);
         props.players.playerTable.grantReadData(this.ticTacToeNewGameHandler);
         this.api.addRoute('newGameTicTacToe', {
-            integration: new WebSocketLambdaIntegration('TicTacToeNewGameIntegration', this.ticTacToeNewGameHandler),
+            integration: new WebSocketLambdaIntegration('TicTacToeNewGameWebSocketIntegration', this.ticTacToeNewGameHandler),
         });
         this.api.grantManageConnections(this.ticTacToeNewGameHandler);
+
+        this.ticTacToeGetHandler = handlerGenerator.generate('TicTacToeGetWebSocketHandler', {
+            handler: 'tic-tac-toe/get.webSocketHandler'
+        });
+        props.ticTacToe.gameStateTable.grantReadData(this.ticTacToeGetHandler);
+        this.api.addRoute('getTicTacToe', {
+            integration: new WebSocketLambdaIntegration('TicTacToeGetWebSocketIntegration', this.ticTacToeGetHandler),
+        });
+        this.api.grantManageConnections(this.ticTacToeGetHandler);
     }
 }

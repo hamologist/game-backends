@@ -39,7 +39,7 @@ export class TicTacToe extends Construct {
             },
         });
         this.getHandler = handlerGenerator.generate('TicTacToeGetHandler', {
-            handler: 'tic-tac-toe/get.handler',
+            handler: 'tic-tac-toe/get.apiHandler',
         });
         this.gameStateTable.grantReadData(this.getHandler);
 
