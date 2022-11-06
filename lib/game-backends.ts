@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Players } from './players';
 import { TicTacToe } from './tic-tac-toe';
-import { WebSocketApi } from './web-socket-api';
+import { WebSocketApi } from './web-socket/api';
 import { BuildContext } from './helpers/build-context';
 
 export interface GameBackendsProps {

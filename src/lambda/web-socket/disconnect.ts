@@ -1,26 +1,35 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { documentClient } from '../shared/models/document-client';
-import { DeleteCommand } from '@aws-sdk/lib-dynamodb';
-
-const CONNECTION_TABLE_NAME = process.env.CONNECTION_TABLE_NAME;
+import { deleteConnection, getConnection } from '../shared/models/connection';
+import { removeConnectionsFromObservable } from '../shared/models/observable';
 
 export const handler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-
-    try {
-        await documentClient.send(
-            new DeleteCommand({
-                TableName: CONNECTION_TABLE_NAME,
-                Key: {
-                    id: event.requestContext.connectionId,
-                }
-            }),
-        );
-    } catch (error) {
+    if (event.requestContext.connectionId === undefined) {
         return {
             statusCode: 500,
-            body: `Failed to disconnect: ${JSON.stringify(error)}`,
+            body: 'Missing connection ID',
+        };
+    }
+
+    const connection = await getConnection(event.requestContext.connectionId);
+    if (connection === null) {
+        return {
+            statusCode: 500,
+            body: 'Failed to disconnect',
+        }
+    }
+
+    const promises = [];
+    for (const observableId of connection.observableIds) {
+        promises.push(removeConnectionsFromObservable(observableId, [connection.id]));
+    }
+    await Promise.all(promises);
+
+    if (!await deleteConnection(event.requestContext.connectionId)) {
+        return {
+            statusCode: 500,
+            body: 'Failed to disconnect',
         };
     }
 

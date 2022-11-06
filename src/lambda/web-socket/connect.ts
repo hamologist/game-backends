@@ -1,26 +1,20 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { documentClient } from '../shared/models/document-client';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
-
-const CONNECTION_TABLE_NAME = process.env.CONNECTION_TABLE_NAME;
+import { createConnection } from '../shared/models/connection';
 
 export const handler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-
-    try {
-        await documentClient.send(
-            new PutCommand({
-                TableName: CONNECTION_TABLE_NAME,
-                Item: {
-                    'id': event.requestContext.connectionId
-                },
-            }),
-        );
-    } catch (error) {
+    if (event.requestContext.connectionId === undefined) {
         return {
             statusCode: 500,
-            body: `Failed to connect: ${JSON.stringify(error)}`,
+            body: 'Missing connection ID',
+        };
+    }
+
+    if (!await createConnection(event.requestContext.connectionId)) {
+        return {
+            statusCode: 500,
+            body: 'Failed to connect',
         };
     }
 

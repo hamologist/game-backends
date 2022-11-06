@@ -14,6 +14,8 @@ import {
     PostToConnectionCommand
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
+import { addObservablesToConnection } from '../shared/models/connection';
+import { createObservable } from '../shared/models/observable';
 
 export const apiHandler = async (
     event: APIGatewayProxyEvent
@@ -28,12 +30,18 @@ export const apiHandler = async (
 export const webSocketHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+    if (event.requestContext.connectionId === undefined) {
+        return createErrorResponse(new Error('Missing connection id'));
+    }
+
     const client = new ApiGatewayManagementApiClient({
         endpoint: `https://${event.requestContext.domainName}/${event.requestContext.stage}`,
     });
 
     try {
         const result = await handler(webSocketEventTransformer, event);
+        await createObservable(result.gameStateId, event.requestContext.connectionId);
+        await addObservablesToConnection(event.requestContext.connectionId, [result.gameStateId])
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
             Data: new TextEncoder().encode(JSON.stringify(result)),
