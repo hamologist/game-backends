@@ -38,7 +38,7 @@ export const getObservable = async(
             new GetCommand({
                 TableName: OBSERVABLE_TABLE_NAME,
                 Key: {
-                    ":observableId": observableId
+                    "observableId": observableId
                 },
             }),
         );

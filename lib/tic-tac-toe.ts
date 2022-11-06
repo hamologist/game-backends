@@ -50,7 +50,7 @@ export class TicTacToe extends Construct {
         props.playerTable.grantReadData(this.joinGameHandler);
 
         this.makeMoveHandler = handlerGenerator.generate('TicTacToeMakeMoveHandler', {
-            handler: 'tic-tac-toe/make-move.handler',
+            handler: 'tic-tac-toe/make-move.apiHandler',
         })
         this.gameStateTable.grantReadWriteData(this.makeMoveHandler);
         props.playerTable.grantReadData(this.makeMoveHandler);

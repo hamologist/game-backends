@@ -20,6 +20,7 @@ export class WebSocketTicTacToe extends Construct {
     public readonly newGameHandler: lambda.Function;
     public readonly getHandler: lambda.Function;
     public readonly joinGameHandler: lambda.Function;
+    public readonly makeMoveHandler: lambda.Function;
 
     constructor(scope: Construct, id: string, props: WebSocketTicTacToeProps) {
         super(scope, id);
@@ -56,5 +57,16 @@ export class WebSocketTicTacToe extends Construct {
             integration: new WebSocketLambdaIntegration('TicTacToeJoinGameWebSocketIntegration', this.joinGameHandler),
         });
         props.api.grantManageConnections(this.joinGameHandler);
+
+        this.makeMoveHandler = props.webSocketHandlerGenerator.generate('TicTacToeMakeMoveWebSocketHandler', {
+            handler: 'tic-tac-toe/make-move.webSocketHandler',
+        });
+        props.observerTable.grantReadData(this.makeMoveHandler);
+        props.ticTacToe.gameStateTable.grantReadWriteData(this.makeMoveHandler);
+        props.players.playerTable.grantReadData(this.makeMoveHandler);
+        props.api.addRoute('makeMoveTicTacToe', {
+            integration: new WebSocketLambdaIntegration('TicTacToeMakeMoveWebSocketIntegration', this.makeMoveHandler),
+        });
+        props.api.grantManageConnections(this.makeMoveHandler);
     }
 }
