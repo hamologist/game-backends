@@ -21,10 +21,12 @@ export const handler = async (
     }
 
     const promises = [];
-    for (const observableId of connection.observableIds) {
-        promises.push(removeConnectionsFromObservable(observableId, [connection.id]));
+    if (connection.observableIds !== undefined) {
+        for (const observableId of connection?.observableIds) {
+            promises.push(removeConnectionsFromObservable(observableId, [connection.id]));
+        }
+        await Promise.all(promises);
     }
-    await Promise.all(promises);
 
     if (!await deleteConnection(event.requestContext.connectionId)) {
         return {
