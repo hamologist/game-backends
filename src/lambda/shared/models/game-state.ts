@@ -70,7 +70,8 @@ export const createGame = async (
                 id: gameStateId,
                 playerOne: playerId,
                 playerTwo: null,
-                state: gameState
+                state: gameState,
+                expirationTime: (Date.now() / 1000) + (60 * 60),
             },
         })
     )

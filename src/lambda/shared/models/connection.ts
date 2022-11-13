@@ -89,7 +89,7 @@ export const removeObservablesFromConnection = async (
                     'id': connectionId,
                 },
                 ExpressionAttributeValues: {
-                    'observableIds': new Set(observableIds),
+                    ':observableIds': new Set(observableIds),
                 },
                 UpdateExpression: 'DELETE observableIds :observableIds',
             }),

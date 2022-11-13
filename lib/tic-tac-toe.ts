@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
+import * as eventsources from 'aws-cdk-lib/aws-lambda-event-sources'
 import { CfnOutput } from 'aws-cdk-lib';
 import { HandlerGenerator } from './helpers/handler-generator';
 import { BuildContext } from './helpers/build-context';
@@ -18,6 +18,7 @@ export class TicTacToe extends Construct {
     public readonly joinGameHandler: lambda.Function;
     public readonly makeMoveHandler: lambda.Function;
     public readonly newGameHandler: lambda.Function;
+    public readonly gameStateTableRemoveEventSource: eventsources.DynamoEventSource;
 
     constructor(scope: Construct, id: string, props: TicTacToeProps) {
         super(scope, id);
@@ -25,9 +26,19 @@ export class TicTacToe extends Construct {
         this.gameStateTable = props.buildContext.tableGenerator.generate('GameStateTable', {
             tableName: `${props.buildContext.stageContext.stageToString()}-game-backends-game-state`,
             partitionKey: {
-                type: AttributeType.STRING,
+                type: dynamodb.AttributeType.STRING,
                 name: 'id',
             },
+            timeToLiveAttribute: 'expirationTime',
+            stream: dynamodb.StreamViewType.KEYS_ONLY,
+        });
+        this.gameStateTableRemoveEventSource = new eventsources.DynamoEventSource(this.gameStateTable, {
+            startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+            filters: [
+                lambda.FilterCriteria.filter({
+                    eventName: lambda.FilterRule.isEqual('REMOVE'),
+                }),
+            ],
         });
 
         const handlerGenerator = new HandlerGenerator(this, 'TicTacToeHandlerGenerator', {

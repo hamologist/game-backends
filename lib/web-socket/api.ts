@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import * as apigatewayv2 from '@aws-cdk/aws-apigatewayv2-alpha';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
+import * as eventsources from 'aws-cdk-lib/aws-lambda-event-sources'
 import { WebSocketLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha'
 import { HandlerGenerator } from '../helpers/handler-generator';
 import { Players } from '../players';
@@ -21,10 +21,13 @@ export class WebSocketApi extends Construct {
     public readonly api: apigatewayv2.WebSocketApi;
     public readonly connectionTable: dynamodb.Table;
     public readonly observableTable: dynamodb.Table;
+    public readonly gameStateCleanupHandler: lambda.Function;
+    public readonly observableCleanupHandler: lambda.Function;
     public readonly connectHandler: lambda.Function;
     public readonly disconnectHandler: lambda.Function;
     public readonly webSocketPlayers: WebSocketPlayers;
     public readonly webSocketTicTacToe: WebSocketTicTacToe;
+    public readonly observableTableRemoveEventSource: eventsources.DynamoEventSource
 
     constructor(scope: Construct, id: string, props: WebSocketApiProps) {
         super(scope, id);
@@ -32,7 +35,7 @@ export class WebSocketApi extends Construct {
         this.connectionTable = props.buildContext.tableGenerator.generate('WebSocketConnectionTable', {
             tableName: `${props.buildContext.stageContext.stageToString()}-game-backends-connection-table`,
             partitionKey: {
-                type: AttributeType.STRING,
+                type: dynamodb.AttributeType.STRING,
                 name: 'id',
             },
         });
@@ -40,9 +43,18 @@ export class WebSocketApi extends Construct {
         this.observableTable = props.buildContext.tableGenerator.generate('WebSocketObservableTable', {
             tableName: `${props.buildContext.stageContext.stageToString()}-game-backends-observable-table`,
             partitionKey: {
-                type: AttributeType.STRING,
+                type: dynamodb.AttributeType.STRING,
                 name: 'observableId',
             },
+            stream: dynamodb.StreamViewType.OLD_IMAGE,
+        });
+        this.observableTableRemoveEventSource = new eventsources.DynamoEventSource(this.observableTable, {
+            startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+            filters: [
+                lambda.FilterCriteria.filter({
+                    eventName: lambda.FilterRule.isEqual('REMOVE'),
+                }),
+            ],
         });
 
         const webSocketHandlerGenerator = new HandlerGenerator(this, 'WebSocketApiHandlerGenerator', {
@@ -55,6 +67,19 @@ export class WebSocketApi extends Construct {
                 },
             },
         });
+
+        this.gameStateCleanupHandler = webSocketHandlerGenerator.generate('GameStateCleanupHandler', {
+            handler: 'cleanup/game-state.handler',
+        });
+        this.gameStateCleanupHandler.addEventSource(props.ticTacToe.gameStateTableRemoveEventSource);
+        this.observableTable.grantWriteData(this.gameStateCleanupHandler);
+
+        this.observableCleanupHandler = webSocketHandlerGenerator.generate('ObservableCleanupHandler', {
+            handler: 'cleanup/observable.handler'
+        });
+        this.observableCleanupHandler.addEventSource(this.observableTableRemoveEventSource);
+        this.connectionTable.grantWriteData(this.observableCleanupHandler);
+
         this.connectHandler = webSocketHandlerGenerator.generate('WebSocketConnectHandler', {
             handler: 'web-socket/connect.handler',
         });
