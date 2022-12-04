@@ -48,8 +48,9 @@ export class Players extends Construct {
         });
         this.playerTable.grantWriteData(this.createHandler);
 
-        this.getHandler = handlerGenerator.generate('PlayersGetHandler', {
-            handler: 'players/get.apiHandler',
+        this.getHandler = nodejsHandlerGenerator.generate('PlayersGetHandler', {
+            entry: 'src/lambda/players/get.ts',
+            handler: 'apiHandler',
         });
         this.playerTable.grantReadData(this.getHandler);
 
