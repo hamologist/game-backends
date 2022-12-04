@@ -1,10 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
-    EventTransformer,
-    restEventTransformer,
-    webSocketEventTransformer
-} from '../shared/services/event-processor';
-import {
     createErrorResponse,
     createSuccessResponse
 } from '../shared/utilities/response-helpers';
@@ -15,11 +10,16 @@ import {
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
 
+interface Payload {
+    id: string,
+    secret: string,
+}
+
 export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(await handler(restEventTransformer, event));
+        return createSuccessResponse(await handler(JSON.parse(event.body!)));
     } catch(err) {
         return createErrorResponse(err);
     }
@@ -33,7 +33,7 @@ export const webSocketHandler = async (
     });
 
     try {
-        const result = await handler(webSocketEventTransformer, event);
+        const result = await handler(JSON.parse(event.body!).payload);
         console.log('result', result);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
@@ -49,21 +49,9 @@ export const webSocketHandler = async (
 };
 
 const handler = async (
-    eventTransformer: EventTransformer,
-    event: APIGatewayProxyEvent,
+    payload: Payload,
 ): Promise<string> => {
-    let body: { playerId: string, playerSecret: string };
-    body = eventTransformer<typeof body>({
-        type: 'object',
-        properties: {
-            playerId: { type: 'string' },
-            playerSecret: { type: 'string'},
-        },
-        required: ['playerId', 'playerSecret'],
-        additionalProperties: false
-    }, event);
-
-    if (!await playerValidator(body.playerId, body.playerSecret)) {
+    if (!await playerValidator(payload.id, payload.secret)) {
         return 'Invalid'
     }
     return 'Valid';

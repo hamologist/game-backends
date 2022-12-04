@@ -6,6 +6,7 @@ import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { CfnOutput } from 'aws-cdk-lib';
 import { HandlerGenerator } from './helpers/handler-generator';
 import { BuildContext } from './helpers/build-context';
+import { NodejsHandlerGenerator } from './helpers/nodejs-handler-generator';
 
 export interface PlayersProps {
    buildContext: BuildContext;
@@ -35,6 +36,13 @@ export class Players extends Construct {
                 },
             },
         });
+        const nodejsHandlerGenerator = new NodejsHandlerGenerator(this, 'PlayersNodejsHandlerGenerator', {
+            defaultLambdaGeneratorProps: {
+                environment: {
+                    PLAYER_TABLE_NAME: this.playerTable.tableName,
+                },
+            },
+        });
         this.createHandler = handlerGenerator.generate('PlayersCreateHandler', {
             handler: 'players/create.apiHandler',
         });
@@ -45,8 +53,9 @@ export class Players extends Construct {
         });
         this.playerTable.grantReadData(this.getHandler);
 
-        this.validateHandler = handlerGenerator.generate('PlayersValidateHandler', {
-            handler: 'players/validate.apiHandler',
+        this.validateHandler = nodejsHandlerGenerator.generate('PlayersValidateHandler', {
+            entry: 'src/lambda/players/validate.ts',
+            handler: 'apiHandler',
         })
         this.playerTable.grantReadData(this.validateHandler);
 
@@ -62,10 +71,33 @@ export class Players extends Construct {
             new apigateway.LambdaIntegration(this.getHandler),
         );
 
+        const validatePlayerRequestModel = props.buildContext.restApi.addModel('GetPlayerModel', {
+            contentType: 'application/json',
+            schema: {
+                type: apigateway.JsonSchemaType.OBJECT,
+                required: ['id', 'secret'],
+                properties: {
+                    id: {
+                        type: apigateway.JsonSchemaType.STRING,
+                    },
+                    secret: {
+                        type: apigateway.JsonSchemaType.STRING,
+                    },
+                },
+            },
+        });
         const validateResource = playerResource.addResource('validate');
         validateResource.addMethod(
             'POST',
             new apigateway.LambdaIntegration(this.validateHandler),
+            {
+                requestValidator: props.buildContext.restApi.addRequestValidator('ValidatePlayerValidator', {
+                    validateRequestBody: true,
+                }),
+                requestModels: {
+                    'application/json': validatePlayerRequestModel,
+                },
+            },
         );
 
         new CfnOutput(this, 'Player Create Path', { value: playerResource.path });
