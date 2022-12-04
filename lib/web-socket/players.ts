@@ -22,7 +22,7 @@ export class WebSocketPlayers extends Construct {
         this.playersCreateHandler = props.webSocketHandlerGenerator.generate('PlayersCreateWebSocketHandler', {
             handler: 'players/create.webSocketHandler',
         });
-        props.players.playerTable.grantWriteData(this.playersCreateHandler);
+        props.players.playersContext.playerTable.grantWriteData(this.playersCreateHandler);
         props.api.addRoute('createPlayer', {
             integration: new WebSocketLambdaIntegration('PlayersCreateWebSocketIntegration', this.playersCreateHandler)
         });
@@ -31,7 +31,7 @@ export class WebSocketPlayers extends Construct {
         this.playersValidateHandler = props.webSocketHandlerGenerator.generate('PlayersValidateWebSocketHandler', {
             handler: 'players/validate.webSocketHandler',
         });
-        props.players.playerTable.grantReadData(this.playersValidateHandler);
+        props.players.playersContext.playerTable.grantReadData(this.playersValidateHandler);
         props.api.addRoute('validatePlayer', {
             integration: new WebSocketLambdaIntegration('PlayersValidateWebSocketIntegration', this.playersValidateHandler)
         });
@@ -40,7 +40,7 @@ export class WebSocketPlayers extends Construct {
         this.playersGetHandler = props.webSocketHandlerGenerator.generate('PlayersGetWebSocketHandler', {
             handler: 'players/get.webSocketHandler',
         });
-        props.players.playerTable.grantReadData(this.playersGetHandler);
+        props.players.playersContext.playerTable.grantReadData(this.playersGetHandler);
         props.api.addRoute('getPlayer', {
             integration: new WebSocketLambdaIntegration('PlayersGetWebSocketIntegration', this.playersGetHandler),
         });

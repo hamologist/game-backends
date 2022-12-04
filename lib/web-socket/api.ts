@@ -62,7 +62,7 @@ export class WebSocketApi extends Construct {
                 environment: {
                     CONNECTION_TABLE_NAME: this.connectionTable.tableName,
                     OBSERVABLE_TABLE_NAME: this.observableTable.tableName,
-                    PLAYER_TABLE_NAME: props.players.playerTable.tableName,
+                    PLAYER_TABLE_NAME: props.players.playersContext.playerTable.tableName,
                     GAME_STATE_TABLE_NAME: props.ticTacToe.gameStateTable.tableName,
                 },
             },

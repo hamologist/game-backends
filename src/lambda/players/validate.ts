@@ -1,7 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
     EventTransformer,
-    restEventTransformer,
     webSocketEventTransformer
 } from '../shared/services/event-processor';
 import {
@@ -14,16 +13,6 @@ import {
     PostToConnectionCommand
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
-
-export const apiHandler = async (
-    event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-    try {
-        return createSuccessResponse(await handler(restEventTransformer, event));
-    } catch(err) {
-        return createErrorResponse(err);
-    }
-};
 
 export const webSocketHandler = async (
     event: APIGatewayProxyEvent

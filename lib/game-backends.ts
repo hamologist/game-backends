@@ -26,7 +26,7 @@ export class GameBackends extends Construct {
 
     this.ticTacToe = new TicTacToe(this, 'TicTacToeStack', {
       buildContext: props.buildContext,
-      playerTable: this.players.playerTable,
+      playerTable: this.players.playersContext.playerTable,
     });
 
     this.webSocketApi = new WebSocketApi(this, 'WebSocketApiStack', {

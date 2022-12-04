@@ -31,7 +31,7 @@ export class WebSocketTicTacToe extends Construct {
         props.observerTable.grantReadWriteData(this.newGameHandler);
         props.connectionTable.grantReadWriteData(this.newGameHandler);
         props.ticTacToe.gameStateTable.grantReadWriteData(this.newGameHandler);
-        props.players.playerTable.grantReadData(this.newGameHandler);
+        props.players.playersContext.playerTable.grantReadData(this.newGameHandler);
         props.api.addRoute('newGameTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeNewGameWebSocketIntegration', this.newGameHandler),
         });
@@ -52,7 +52,7 @@ export class WebSocketTicTacToe extends Construct {
         props.observerTable.grantReadWriteData(this.joinGameHandler);
         props.connectionTable.grantReadWriteData(this.joinGameHandler);
         props.ticTacToe.gameStateTable.grantReadWriteData(this.joinGameHandler);
-        props.players.playerTable.grantReadData(this.joinGameHandler);
+        props.players.playersContext.playerTable.grantReadData(this.joinGameHandler);
         props.api.addRoute('joinGameTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeJoinGameWebSocketIntegration', this.joinGameHandler),
         });
@@ -63,7 +63,7 @@ export class WebSocketTicTacToe extends Construct {
         });
         props.observerTable.grantReadData(this.makeMoveHandler);
         props.ticTacToe.gameStateTable.grantReadWriteData(this.makeMoveHandler);
-        props.players.playerTable.grantReadData(this.makeMoveHandler);
+        props.players.playersContext.playerTable.grantReadData(this.makeMoveHandler);
         props.api.addRoute('makeMoveTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeMakeMoveWebSocketIntegration', this.makeMoveHandler),
         });
