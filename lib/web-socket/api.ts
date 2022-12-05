@@ -4,16 +4,16 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as eventsources from 'aws-cdk-lib/aws-lambda-event-sources'
 import { WebSocketLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha'
-import { HandlerGenerator } from '../helpers/handler-generator';
-import { Players } from '../players';
+import { PlayersContext } from '../players';
 import { TicTacToe } from '../tic-tac-toe';
 import { BuildContext } from '../helpers/build-context';
 import { WebSocketTicTacToe } from './tic-tac-toe';
-import { WebSocketPlayers } from './players';
+import { WebSocketContext } from './context';
+import { NodejsHandlerGenerator } from '../helpers/nodejs-handler-generator';
 
 export interface WebSocketApiProps {
     buildContext: BuildContext;
-    players: Players;
+    playersContext: PlayersContext;
     ticTacToe: TicTacToe;
 }
 
@@ -25,9 +25,9 @@ export class WebSocketApi extends Construct {
     public readonly observableCleanupHandler: lambda.Function;
     public readonly connectHandler: lambda.Function;
     public readonly disconnectHandler: lambda.Function;
-    public readonly webSocketPlayers: WebSocketPlayers;
     public readonly webSocketTicTacToe: WebSocketTicTacToe;
-    public readonly observableTableRemoveEventSource: eventsources.DynamoEventSource
+    public readonly observableTableRemoveEventSource: eventsources.DynamoEventSource;
+    public readonly webSocketContext: WebSocketContext;
 
     constructor(scope: Construct, id: string, props: WebSocketApiProps) {
         super(scope, id);
@@ -57,36 +57,40 @@ export class WebSocketApi extends Construct {
             ],
         });
 
-        const webSocketHandlerGenerator = new HandlerGenerator(this, 'WebSocketApiHandlerGenerator', {
+        const webSocketHandlerGenerator = new NodejsHandlerGenerator(this, 'WebSocketApiHandlerGenerator', {
             defaultLambdaGeneratorProps: {
                 environment: {
                     CONNECTION_TABLE_NAME: this.connectionTable.tableName,
                     OBSERVABLE_TABLE_NAME: this.observableTable.tableName,
-                    PLAYER_TABLE_NAME: props.players.playerTable.tableName,
+                    PLAYER_TABLE_NAME: props.playersContext.playerTable.tableName,
                     GAME_STATE_TABLE_NAME: props.ticTacToe.gameStateTable.tableName,
                 },
             },
         });
 
         this.gameStateCleanupHandler = webSocketHandlerGenerator.generate('GameStateCleanupHandler', {
-            handler: 'cleanup/game-state.handler',
+            entry: 'src/lambda/cleanup/game-state.ts',
+            handler: 'handler',
         });
         this.gameStateCleanupHandler.addEventSource(props.ticTacToe.gameStateTableRemoveEventSource);
         this.observableTable.grantWriteData(this.gameStateCleanupHandler);
 
         this.observableCleanupHandler = webSocketHandlerGenerator.generate('ObservableCleanupHandler', {
-            handler: 'cleanup/observable.handler'
+            entry: 'src/lambda/cleanup/observable.ts',
+            handler: 'handler'
         });
         this.observableCleanupHandler.addEventSource(this.observableTableRemoveEventSource);
         this.connectionTable.grantWriteData(this.observableCleanupHandler);
 
         this.connectHandler = webSocketHandlerGenerator.generate('WebSocketConnectHandler', {
-            handler: 'web-socket/connect.handler',
+            entry: 'src/lambda/web-socket/connect.ts',
+            handler: 'handler',
         });
         this.connectionTable.grantReadWriteData(this.connectHandler);
 
         this.disconnectHandler = webSocketHandlerGenerator.generate('WebSocketDisconnectHandler', {
-            handler: 'web-socket/disconnect.handler',
+            entry: 'src/lambda/web-socket/disconnect.ts',
+            handler: 'handler',
         });
         this.connectionTable.grantReadWriteData(this.disconnectHandler);
         this.observableTable.grantReadWriteData(this.disconnectHandler);
@@ -100,19 +104,11 @@ export class WebSocketApi extends Construct {
             },
         });
 
-        this.webSocketPlayers = new WebSocketPlayers(this, 'WebSocketPlayersStack', {
-            api: this.api,
-            webSocketHandlerGenerator,
-            players: props.players,
-        });
-
-        this.webSocketTicTacToe = new WebSocketTicTacToe(this, 'WebSocketTicTacToeStack', {
+        this.webSocketContext = {
+            observableTable: this.observableTable,
             connectionTable: this.connectionTable,
-            observerTable: this.observableTable,
             api: this.api,
             webSocketHandlerGenerator,
-            ticTacToe: props.ticTacToe,
-            players: props.players,
-        });
+        };
     }
 }

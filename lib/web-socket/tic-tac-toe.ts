@@ -1,19 +1,14 @@
 import { Construct } from 'constructs';
-import * as apigatewayv2 from '@aws-cdk/aws-apigatewayv2-alpha';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { WebSocketLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha'
-import { HandlerGenerator } from '../helpers/handler-generator';
 import { TicTacToe } from '../tic-tac-toe';
-import { Players } from '../players';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import { PlayersContext } from '../players';
+import { WebSocketContext } from './context';
 
 export interface WebSocketTicTacToeProps {
-    connectionTable: dynamodb.Table;
-    observerTable: dynamodb.Table;
     ticTacToe: TicTacToe;
-    players: Players;
-    webSocketHandlerGenerator: HandlerGenerator;
-    api: apigatewayv2.WebSocketApi;
+    playersContext: PlayersContext;
+    webSocketContext: WebSocketContext;
 }
 
 export class WebSocketTicTacToe extends Construct {
@@ -25,48 +20,52 @@ export class WebSocketTicTacToe extends Construct {
     constructor(scope: Construct, id: string, props: WebSocketTicTacToeProps) {
         super(scope, id);
 
-        this.newGameHandler = props.webSocketHandlerGenerator.generate('TicTacToeNewGameWebSocketHandler', {
-            handler: 'tic-tac-toe/new-game.webSocketHandler',
+        this.newGameHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeNewGameWebSocketHandler', {
+            entry: 'src/lambda/tic-tac-toe/new-game.ts',
+            handler: 'webSocketHandler',
         });
-        props.observerTable.grantReadWriteData(this.newGameHandler);
-        props.connectionTable.grantReadWriteData(this.newGameHandler);
+        props.webSocketContext.observableTable.grantReadWriteData(this.newGameHandler);
+        props.webSocketContext.connectionTable.grantReadWriteData(this.newGameHandler);
         props.ticTacToe.gameStateTable.grantReadWriteData(this.newGameHandler);
-        props.players.playerTable.grantReadData(this.newGameHandler);
-        props.api.addRoute('newGameTicTacToe', {
+        props.playersContext.playerTable.grantReadData(this.newGameHandler);
+        props.webSocketContext.api.addRoute('newGameTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeNewGameWebSocketIntegration', this.newGameHandler),
         });
-        props.api.grantManageConnections(this.newGameHandler);
+        props.webSocketContext.api.grantManageConnections(this.newGameHandler);
 
-        this.getHandler = props.webSocketHandlerGenerator.generate('TicTacToeGetWebSocketHandler', {
-            handler: 'tic-tac-toe/get.webSocketHandler'
+        this.getHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeGetWebSocketHandler', {
+            entry: 'src/lambda/tic-tac-toe/get.ts',
+            handler: 'webSocketHandler'
         });
         props.ticTacToe.gameStateTable.grantReadData(this.getHandler);
-        props.api.addRoute('getTicTacToe', {
+        props.webSocketContext.api.addRoute('getTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeGetWebSocketIntegration', this.getHandler),
         });
-        props.api.grantManageConnections(this.getHandler);
+        props.webSocketContext.api.grantManageConnections(this.getHandler);
 
-        this.joinGameHandler = props.webSocketHandlerGenerator.generate('TicTacToeJoinGameWebSocketHandler', {
-            handler: 'tic-tac-toe/join-game.webSocketHandler',
+        this.joinGameHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeJoinGameWebSocketHandler', {
+            entry: 'src/lambda/tic-tac-toe/join-game.ts',
+            handler: 'webSocketHandler',
         });
-        props.observerTable.grantReadWriteData(this.joinGameHandler);
-        props.connectionTable.grantReadWriteData(this.joinGameHandler);
+        props.webSocketContext.observableTable.grantReadWriteData(this.joinGameHandler);
+        props.webSocketContext.connectionTable.grantReadWriteData(this.joinGameHandler);
         props.ticTacToe.gameStateTable.grantReadWriteData(this.joinGameHandler);
-        props.players.playerTable.grantReadData(this.joinGameHandler);
-        props.api.addRoute('joinGameTicTacToe', {
+        props.playersContext.playerTable.grantReadData(this.joinGameHandler);
+        props.webSocketContext.api.addRoute('joinGameTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeJoinGameWebSocketIntegration', this.joinGameHandler),
         });
-        props.api.grantManageConnections(this.joinGameHandler);
+        props.webSocketContext.api.grantManageConnections(this.joinGameHandler);
 
-        this.makeMoveHandler = props.webSocketHandlerGenerator.generate('TicTacToeMakeMoveWebSocketHandler', {
-            handler: 'tic-tac-toe/make-move.webSocketHandler',
+        this.makeMoveHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeMakeMoveWebSocketHandler', {
+            entry: 'src/lambda/tic-tac-toe/make-move.ts',
+            handler: 'webSocketHandler',
         });
-        props.observerTable.grantReadData(this.makeMoveHandler);
+        props.webSocketContext.observableTable.grantReadData(this.makeMoveHandler);
         props.ticTacToe.gameStateTable.grantReadWriteData(this.makeMoveHandler);
-        props.players.playerTable.grantReadData(this.makeMoveHandler);
-        props.api.addRoute('makeMoveTicTacToe', {
+        props.playersContext.playerTable.grantReadData(this.makeMoveHandler);
+        props.webSocketContext.api.addRoute('makeMoveTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeMakeMoveWebSocketIntegration', this.makeMoveHandler),
         });
-        props.api.grantManageConnections(this.makeMoveHandler);
+        props.webSocketContext.api.grantManageConnections(this.makeMoveHandler);
     }
 }
