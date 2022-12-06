@@ -13,11 +13,18 @@ import {
 } from '../shared/utilities/response-helpers';
 import { TextEncoder } from 'util';
 
+interface HandlerPayload {
+    username: string;
+}
+
 export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(SUCCESS_MESSAGE, await handler(restEventTransformer, event));
+        return createSuccessResponse(
+            SUCCESS_MESSAGE,
+            await handler(JSON.parse(event.body!)),
+        );
     } catch(err) {
         return createErrorResponse(err);
     }
@@ -31,7 +38,7 @@ export const webSocketHandler = async (
     });
 
     try {
-        const result = await handler(webSocketEventTransformer, event);
+        const result = await handler(JSON.parse(event.body!).payload);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
             Data: new TextEncoder().encode(JSON.stringify(result)),
@@ -43,21 +50,11 @@ export const webSocketHandler = async (
     }
 };
 
-const handler = async (
-    eventTransformer: EventTransformer,
-    event: APIGatewayProxyEvent,
-): Promise<{ playerId: string, playerSecret: string }> => {
-    let body: { username: string };
-    body = eventTransformer<typeof body>({
-        type: 'object',
-        properties: {
-            username: { type: 'string' }
-        },
-        required: ['username'],
-        additionalProperties: false
-    }, event);
-
-    const result = await createPlayer(body.username)
+const handler = async (payload: HandlerPayload): Promise<{
+    playerId: string;
+    playerSecret: string;
+}> => {
+    const result = await createPlayer(payload.username)
     return {
         playerId: result.id,
         playerSecret: result.secret,

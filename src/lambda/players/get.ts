@@ -1,10 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
-    EventTransformer,
-    eventPathTransformer,
-    webSocketEventTransformer
-} from '../shared/services/event-processor';
-import {
     createErrorResponse,
     createSuccessResponse,
     SUCCESS_MESSAGE
@@ -16,11 +11,20 @@ import {
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
 
+interface HandlerPayload {
+    id: string;
+}
+
 export const apiHandler = async (
-    event: APIGatewayProxyEvent
+    event: APIGatewayProxyEvent & {
+        pathParameters: HandlerPayload
+    }
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(SUCCESS_MESSAGE, await handler(eventPathTransformer, event));
+        return createSuccessResponse(
+            SUCCESS_MESSAGE,
+            await handler(event.pathParameters),
+        );
     } catch(err) {
         return createErrorResponse(err);
     }
@@ -34,7 +38,7 @@ export const webSocketHandler = async (
     });
 
     try {
-        const player = await handler(webSocketEventTransformer, event);
+        const player = await handler(JSON.parse(event.body!).payload);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
             Data: new TextEncoder().encode(JSON.stringify(player)),
@@ -48,23 +52,10 @@ export const webSocketHandler = async (
     }
 };
 
-export const handler = async (
-    eventTransformer: EventTransformer,
-    event: APIGatewayProxyEvent,
-): Promise<{ username: string }> => {
-    let body: { id: string };
-    body = eventTransformer<typeof body>({
-        type: 'object',
-        properties: {
-            id: { type: 'string' }
-        },
-        required: ['id'],
-        additionalProperties: false
-    }, event);
-
-    const result = await getPlayer(body.id);
+export const handler = async (payload: HandlerPayload,): Promise<{ username: string }> => {
+    const result = await getPlayer(payload.id);
     if (result === null) {
-        console.error(`Failed to find playerId: "${body.id}"`)
+        console.error(`Failed to find playerId: "${payload.id}"`)
         throw new Error('Provided playerId does not exist.');
     }
     return { username: result.username };

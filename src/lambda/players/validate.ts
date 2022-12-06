@@ -10,9 +10,9 @@ import {
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
 
-interface Payload {
-    id: string,
-    secret: string,
+interface HandlerPayload {
+    id: string;
+    secret: string;
 }
 
 export const apiHandler = async (
@@ -49,7 +49,7 @@ export const webSocketHandler = async (
 };
 
 const handler = async (
-    payload: Payload,
+    payload: HandlerPayload,
 ): Promise<string> => {
     if (!await playerValidator(payload.id, payload.secret)) {
         return 'Invalid'
