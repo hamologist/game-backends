@@ -29,7 +29,7 @@ export class PlayersCreate extends Construct {
                         properties: {
                             username: { type: JsonSchemaType.STRING },
                         },
-                        required: ['username' ],
+                        required: ['username'],
                         type: JsonSchemaType.OBJECT,
                     },
                 },

@@ -9,14 +9,14 @@ import { PlayersCreate } from './rest-api/create';
 import { WebSocketPlayers } from './web-socket';
 import { WebSocketContext } from '../web-socket/context';
 
-export interface PlayersProps {
+export interface PlayersConstructProps {
    buildContext: BuildContext;
 }
 
 export class PlayersConstruct extends Construct {
     public readonly playersContext: PlayersContext;
 
-    constructor(scope: Construct, id: string, props: PlayersProps) {
+    constructor(scope: Construct, id: string, props: PlayersConstructProps) {
         super(scope, id);
 
         const playerTable = props.buildContext.tableGenerator.generate('PlayerTable', {

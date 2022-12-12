@@ -1,9 +1,9 @@
 import { Construct } from 'constructs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { PlayersConstruct } from './players';
-import { TicTacToe } from './tic-tac-toe';
 import { WebSocketApi } from './web-socket/api';
 import { BuildContext } from './helpers/build-context';
+import { TicTacToeConstruct } from './tic-tac-toe';
 
 export interface GameBackendsProps {
   buildContext: BuildContext;
@@ -14,7 +14,7 @@ export class GameBackends extends Construct {
   public readonly buildContext: BuildContext;
   public readonly webSocketApi: WebSocketApi;
   public readonly players: PlayersConstruct;
-  public readonly ticTacToe: TicTacToe;
+  public readonly ticTacToe: TicTacToeConstruct;
 
   constructor(scope: Construct, id: string, props: GameBackendsProps) {
     super(scope, id);
@@ -25,7 +25,7 @@ export class GameBackends extends Construct {
       buildContext: props.buildContext,
     });
 
-    this.ticTacToe = new TicTacToe(this, 'TicTacToeStack', {
+    this.ticTacToe = new TicTacToeConstruct(this, 'TicTacToeStack', {
       buildContext: props.buildContext,
       playersContext: this.players.playersContext,
     });
@@ -33,7 +33,7 @@ export class GameBackends extends Construct {
     this.webSocketApi = new WebSocketApi(this, 'WebSocketApiStack', {
       buildContext: props.buildContext,
       playersContext: this.players.playersContext,
-      ticTacToe: this.ticTacToe,
+      ticTacToeContext: this.ticTacToe.ticTacToeContext,
     });
 
     this.players.buildWebSocket(this.webSocketApi.webSocketContext);

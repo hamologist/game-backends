@@ -1,10 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
-import {
-    EventTransformer,
-    restEventTransformer,
-    webSocketEventTransformer
-} from '../shared/services/event-processor';
 import { createPlayer } from '../shared/models/player';
 import {
     createErrorResponse,

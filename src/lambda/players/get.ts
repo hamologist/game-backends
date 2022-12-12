@@ -17,7 +17,7 @@ interface HandlerPayload {
 
 export const apiHandler = async (
     event: APIGatewayProxyEvent & {
-        pathParameters: HandlerPayload
+        pathParameters: HandlerPayload;
     }
 ): Promise<APIGatewayProxyResult> => {
     try {

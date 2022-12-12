@@ -5,16 +5,15 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as eventsources from 'aws-cdk-lib/aws-lambda-event-sources'
 import { WebSocketLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha'
 import { PlayersContext } from '../players';
-import { TicTacToe } from '../tic-tac-toe';
+import { TicTacToeContext } from '../tic-tac-toe';
 import { BuildContext } from '../helpers/build-context';
-import { WebSocketTicTacToe } from './tic-tac-toe';
 import { WebSocketContext } from './context';
 import { NodejsHandlerGenerator } from '../helpers/nodejs-handler-generator';
 
 export interface WebSocketApiProps {
     buildContext: BuildContext;
     playersContext: PlayersContext;
-    ticTacToe: TicTacToe;
+    ticTacToeContext: TicTacToeContext;
 }
 
 export class WebSocketApi extends Construct {
@@ -25,7 +24,6 @@ export class WebSocketApi extends Construct {
     public readonly observableCleanupHandler: lambda.Function;
     public readonly connectHandler: lambda.Function;
     public readonly disconnectHandler: lambda.Function;
-    public readonly webSocketTicTacToe: WebSocketTicTacToe;
     public readonly observableTableRemoveEventSource: eventsources.DynamoEventSource;
     public readonly webSocketContext: WebSocketContext;
 
@@ -63,7 +61,7 @@ export class WebSocketApi extends Construct {
                     CONNECTION_TABLE_NAME: this.connectionTable.tableName,
                     OBSERVABLE_TABLE_NAME: this.observableTable.tableName,
                     PLAYER_TABLE_NAME: props.playersContext.playerTable.tableName,
-                    GAME_STATE_TABLE_NAME: props.ticTacToe.gameStateTable.tableName,
+                    GAME_STATE_TABLE_NAME: props.ticTacToeContext.gameStateTable.tableName,
                 },
             },
         });
@@ -72,7 +70,7 @@ export class WebSocketApi extends Construct {
             entry: 'src/lambda/cleanup/game-state.ts',
             handler: 'handler',
         });
-        this.gameStateCleanupHandler.addEventSource(props.ticTacToe.gameStateTableRemoveEventSource);
+        this.gameStateCleanupHandler.addEventSource(props.ticTacToeContext.gameStateTableRemoveEventSource);
         this.observableTable.grantWriteData(this.gameStateCleanupHandler);
 
         this.observableCleanupHandler = webSocketHandlerGenerator.generate('ObservableCleanupHandler', {

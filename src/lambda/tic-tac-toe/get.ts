@@ -1,10 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
-    eventPathTransformer,
-    EventTransformer,
-    webSocketEventTransformer
-} from '../shared/services/event-processor';
-import {
     createErrorResponse,
     createSuccessResponse,
     SUCCESS_MESSAGE
@@ -16,15 +11,24 @@ import {
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
 
+interface HandlerPayload {
+    id: string;
+}
+
 export const apiHandler = async (
-    event: APIGatewayProxyEvent
+    event: APIGatewayProxyEvent & {
+        pathParameters: HandlerPayload;
+    }
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(SUCCESS_MESSAGE, await handler(eventPathTransformer, event));
+        return createSuccessResponse(
+            SUCCESS_MESSAGE,
+            await handler(event.pathParameters)
+        );
     } catch (err) {
         return createErrorResponse(err);
     }
-}
+};
 
 export const webSocketHandler = async(
     event: APIGatewayProxyEvent
@@ -34,7 +38,7 @@ export const webSocketHandler = async(
     });
 
     try {
-        const gameState = await handler(webSocketEventTransformer, event);
+        const gameState = await handler(JSON.parse(event.body!).payload);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
             Data: new TextEncoder().encode(JSON.stringify(gameState)),
@@ -46,27 +50,13 @@ export const webSocketHandler = async(
         console.log('Error', err);
         return createErrorResponse(err);
     }
-}
+};
 
-export const handler = async (
-    eventTransformer: EventTransformer,
-    event: APIGatewayProxyEvent,
-): Promise<{ gameState: GameStateResult }> => {
-    let body: { id: string };
-    body = eventTransformer<typeof body>({
-        type: 'object',
-        properties: {
-            id: { type: 'string' }
-        },
-        required: ['id'],
-        additionalProperties: false
-    }, event);
-
-    const gameState = await getGame(body.id);
+export const handler = async (payload: HandlerPayload): Promise<{ gameState: GameStateResult }> => {
+    const gameState = await getGame(payload.id);
     if (gameState === null) {
-        console.error(`Failed to find gameStateId: "${body.id}"`)
+        console.error(`Failed to find gameStateId: "${payload.id}"`)
         throw new Error('Provided gameStateId does not exist.')
     }
     return { gameState };
 };
-

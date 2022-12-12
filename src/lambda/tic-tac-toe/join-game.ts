@@ -1,10 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
-    EventTransformer,
-    restEventTransformer,
-    webSocketEventTransformer
-} from '../shared/services/event-processor';
-import {
     createErrorResponse,
     createSuccessResponse,
     SUCCESS_MESSAGE
@@ -19,15 +14,26 @@ import { TextEncoder } from 'util';
 import { addObservablesToConnection } from '../shared/models/connection';
 import { addConnectionsToObservable } from '../shared/models/observable';
 
+interface HandlerPayload {
+    id: string;
+    player: {
+        id: string;
+        secret: string;
+    };
+}
+
 export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(SUCCESS_MESSAGE, await handler(restEventTransformer, event));
+        return createSuccessResponse(
+            SUCCESS_MESSAGE,
+            await handler(JSON.parse(event.body!))
+        );
     } catch(err) {
         return createErrorResponse(err);
     }
-}
+};
 
 export const webSocketHandler = async (
     event: APIGatewayProxyEvent
@@ -41,7 +47,7 @@ export const webSocketHandler = async (
     });
 
     try {
-        const result = await handler(webSocketEventTransformer, event);
+        const result = await handler(JSON.parse(event.body!).payload);
         await addObservablesToConnection(event.requestContext.connectionId, [result.gameState.id]);
         await addConnectionsToObservable(result.gameState.id, [event.requestContext.connectionId]);
         await client.send(new PostToConnectionCommand({
@@ -54,28 +60,9 @@ export const webSocketHandler = async (
         console.log('Error', err);
         return createErrorResponse(err);
     }
-}
+};
 
-export const handler = async (
-    eventTransformer: EventTransformer,
-    event: APIGatewayProxyEvent
-): Promise<{ gameState: GameStateResult }> => {
-    let body: {
-        gameStateId: string,
-        playerId: string,
-        playerSecret: string,
-    };
-    body = eventTransformer<typeof body>({
-        type: 'object',
-        properties: {
-            gameStateId: { type: 'string' },
-            playerId: { type: 'string' },
-            playerSecret: { type: 'string' },
-        },
-        required: ['gameStateId', 'playerId', 'playerSecret'],
-        additionalProperties: false
-    }, event);
-
-    const gameState = await joinGame(body.gameStateId, body.playerId, body.playerSecret);
+export const handler = async (payload: HandlerPayload): Promise<{ gameState: GameStateResult }> => {
+    const gameState = await joinGame(payload.id, payload.player.id, payload.player.secret);
     return { gameState }
-}
+};
