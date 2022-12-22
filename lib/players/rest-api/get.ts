@@ -19,6 +19,7 @@ export class PlayersGet extends Construct {
         this.getHandler = props.playersContext.playerNodejsHandlerGenerator.generate('PlayersGetHandler', {
             entry: 'src/lambda/players/get.ts',
             handler: 'apiHandler',
+            functionName: 'PlayersGetRestHandler'
         });
         props.playersContext.playerTable.grantReadData(this.getHandler);
 

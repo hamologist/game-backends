@@ -21,6 +21,7 @@ export class TicTacToeMakeMove extends Construct {
         this.makeMoveHandler = props.ticTacToeContext.gameStateNodejsHandlerGenerator.generate('TicTacToeMakeMoveHandler', {
             entry: 'src/lambda/tic-tac-toe/make-move.ts',
             handler: 'apiHandler',
+            functionName: 'TicTacToeMakeMoveRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.makeMoveHandler);
         props.playersContext.playerTable.grantReadData(this.makeMoveHandler);

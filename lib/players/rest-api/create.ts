@@ -19,6 +19,7 @@ export class PlayersCreate extends Construct {
         this.createHandler = props.playersContext.playerNodejsHandlerGenerator.generate('PlayersCreateHandler', {
             entry: 'src/lambda/players/create.ts',
             handler: 'apiHandler',
+            functionName: 'PlayersCreateRestHandler',
         });
         props.playersContext.playerTable.grantWriteData(this.createHandler);
 

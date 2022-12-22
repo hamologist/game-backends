@@ -9,8 +9,8 @@ export const handler = async (
             break;
         }
 
-        const observableId = record.dynamodb?.OldImage?.observableId.S;
-        const connectionIds = record.dynamodb?.OldImage?.connectionIds.SS;
+        const observableId = record.dynamodb?.OldImage?.observableId?.S;
+        const connectionIds = record.dynamodb?.OldImage?.connectionIds?.SS;
 
         if (connectionIds === undefined || observableId === undefined) {
             return;

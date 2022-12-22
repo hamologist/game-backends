@@ -21,6 +21,7 @@ export class TicTacToeGet extends Construct {
         this.getHandler = props.ticTacToeContext.gameStateNodejsHandlerGenerator.generate('TicTacToeGetHandler', {
             entry: 'src/lambda/tic-tac-toe/get.ts',
             handler: 'apiHandler',
+            functionName: 'TicTacToeGetRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadData(this.getHandler);
 

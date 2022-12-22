@@ -59,6 +59,7 @@ export class TicTacToeMakeMove extends Construct {
         this.makeMoveHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeMakeMoveWebSocketHandler', {
             entry: 'src/lambda/tic-tac-toe/make-move.ts',
             handler: 'webSocketHandler',
+            functionName: 'TicTacToeMakeMoveWebsocketHandler',
         });
         props.webSocketContext.observableTable.grantReadData(this.makeMoveHandler);
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.makeMoveHandler);

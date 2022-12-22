@@ -41,6 +41,7 @@ export class PlayersCreate extends Construct {
         this.createHandler = props.webSocketContext.webSocketHandlerGenerator.generate('PlayersCreateWebSocketHandler', {
             entry: 'src/lambda/players/create.ts',
             handler: 'webSocketHandler',
+            functionName: 'PlayersCreateWebsocketHandler',
         });
         props.playersContext.playerTable.grantWriteData(this.createHandler);
         const playerCreateRoute = props.webSocketContext.api.addRoute('createPlayer', {

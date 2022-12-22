@@ -44,6 +44,7 @@ export class TicTacToeGet extends Construct {
         this.getHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeGetWebSocketHandler', {
             entry: 'src/lambda/tic-tac-toe/get.ts',
             handler: 'webSocketHandler',
+            functionName: 'TicTacToeGetWebsocketHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadData(this.getHandler);
 

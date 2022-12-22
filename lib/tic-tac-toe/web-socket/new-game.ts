@@ -51,6 +51,7 @@ export class TicTacToeNewGame extends Construct {
         this.newGameHandler = props.webSocketContext.webSocketHandlerGenerator.generate('TicTacToeNewGameWebSocketHandler', {
             entry: 'src/lambda/tic-tac-toe/new-game.ts',
             handler: 'webSocketHandler',
+            functionName: 'TicTacToeNewGameWebsocketHandler',
         });
         props.webSocketContext.observableTable.grantReadWriteData(this.newGameHandler);
         props.webSocketContext.connectionTable.grantReadWriteData(this.newGameHandler);

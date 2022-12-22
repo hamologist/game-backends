@@ -19,6 +19,7 @@ export class PlayersValidate extends Construct {
         this.validateHandler = props.playersContext.playerNodejsHandlerGenerator.generate('PlayersValidateHandler', {
             entry: 'src/lambda/players/validate.ts',
             handler: 'apiHandler',
+            functionName: 'PlayersValidateRestHandler',
         });
         props.playersContext.playerTable.grantReadData(this.validateHandler);
 

@@ -69,13 +69,15 @@ export class WebSocketApi extends Construct {
         this.gameStateCleanupHandler = webSocketHandlerGenerator.generate('GameStateCleanupHandler', {
             entry: 'src/lambda/cleanup/game-state.ts',
             handler: 'handler',
+            functionName: 'GameStateCleanupHandler',
         });
         this.gameStateCleanupHandler.addEventSource(props.ticTacToeContext.gameStateTableRemoveEventSource);
         this.observableTable.grantWriteData(this.gameStateCleanupHandler);
 
         this.observableCleanupHandler = webSocketHandlerGenerator.generate('ObservableCleanupHandler', {
             entry: 'src/lambda/cleanup/observable.ts',
-            handler: 'handler'
+            handler: 'handler',
+            functionName: 'ObservableCleanupHandler',
         });
         this.observableCleanupHandler.addEventSource(this.observableTableRemoveEventSource);
         this.connectionTable.grantWriteData(this.observableCleanupHandler);
@@ -83,12 +85,14 @@ export class WebSocketApi extends Construct {
         this.connectHandler = webSocketHandlerGenerator.generate('WebSocketConnectHandler', {
             entry: 'src/lambda/web-socket/connect.ts',
             handler: 'handler',
+            functionName: 'WebSocketConnectHandler',
         });
         this.connectionTable.grantReadWriteData(this.connectHandler);
 
         this.disconnectHandler = webSocketHandlerGenerator.generate('WebSocketDisconnectHandler', {
             entry: 'src/lambda/web-socket/disconnect.ts',
             handler: 'handler',
+            functionName: 'WebSocketDisconnectHandler',
         });
         this.connectionTable.grantReadWriteData(this.disconnectHandler);
         this.observableTable.grantReadWriteData(this.disconnectHandler);

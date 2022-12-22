@@ -10,6 +10,7 @@ import {
     PostToConnectionCommand
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { TextEncoder } from 'util';
+import { StatusError } from '../shared/utilities/status-error';
 
 interface HandlerPayload {
     id: string;
@@ -47,6 +48,16 @@ export const webSocketHandler = async (
         console.log('Success');
         return createSuccessResponse(SUCCESS_MESSAGE, player);
     } catch(err) {
+        if (err instanceof Error) {
+            await client.send(new PostToConnectionCommand({
+                ConnectionId: event.requestContext.connectionId,
+                Data: new TextEncoder().encode(JSON.stringify({
+                    error: 'PLAYER_NOT_FOUND',
+                    message: err.message,
+                })),
+          }));
+        }
+
         console.log('Error', err);
         return createErrorResponse(err);
     }
@@ -56,7 +67,7 @@ export const handler = async (payload: HandlerPayload,): Promise<{ username: str
     const result = await getPlayer(payload.id);
     if (result === null) {
         console.error(`Failed to find playerId: "${payload.id}"`)
-        throw new Error('Provided playerId does not exist.');
+        throw new StatusError('Provided playerId does not exist.', 404);
     }
     return { username: result.username };
 };

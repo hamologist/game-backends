@@ -21,6 +21,7 @@ export class TicTacToeJoinGame extends Construct {
         this.joinGameHandler = props.ticTacToeContext.gameStateNodejsHandlerGenerator.generate('TicTacToeJoinGameHandler', {
             entry: 'src/lambda/tic-tac-toe/join-game.ts',
             handler: 'apiHandler',
+            functionName: 'TicTacToeJoinGameRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.joinGameHandler);
         props.playersContext.playerTable.grantReadData(this.joinGameHandler);

@@ -21,6 +21,7 @@ export class TicTacToeNewGame extends Construct {
         this.newGameHandler = props.ticTacToeContext.gameStateNodejsHandlerGenerator.generate('TicTacToeNewGameHandler', {
             entry: 'src/lambda/tic-tac-toe/new-game.ts',
             handler: 'apiHandler',
+            functionName: 'TicTacToeNewGameRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.newGameHandler);
         props.playersContext.playerTable.grantReadData(this.newGameHandler);

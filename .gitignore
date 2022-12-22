@@ -1,4 +1,5 @@
 .idea
+*.code-workspace
 *.js
 *.js.map
 !jest.config.js

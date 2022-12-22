@@ -42,6 +42,7 @@ export class PlayersValidate extends Construct {
         this.validateHandler = props.webSocketContext.webSocketHandlerGenerator.generate('PlayersValidateWebSocketHandler', {
             entry: 'src/lambda/players/validate.ts',
             handler: 'webSocketHandler',
+            functionName: 'PlayersValidateWebsocketHandler'
         });
         props.playersContext.playerTable.grantReadData(this.validateHandler);
         const playerValidateRoute = props.webSocketContext.api.addRoute('validatePlayer', {
