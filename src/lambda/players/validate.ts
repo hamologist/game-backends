@@ -1,7 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
     createErrorResponse,
-    createSuccessResponse
+    createSuccessResponse,
+    SUCCESS_MESSAGE
 } from '../shared/utilities/response-helpers';
 import { playerValidator } from '../shared/services/player-validator';
 import {
@@ -19,7 +20,10 @@ export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
     try {
-        return createSuccessResponse(await handler(JSON.parse(event.body!)));
+        return createSuccessResponse(
+            SUCCESS_MESSAGE,
+            { valid: await handler(JSON.parse(event.body!)) },
+        );
     } catch(err) {
         return createErrorResponse(err);
     }
@@ -31,15 +35,20 @@ export const webSocketHandler = async (
     const client = retrieveClient(event.requestContext);
 
     try {
-        const result = await handler(JSON.parse(event.body!).payload);
-        console.log('result', result);
+        const valid = await handler(JSON.parse(event.body!).payload);
+        const responsePayload = JSON.stringify({
+            message: 'Success',
+            action: 'validatePlayer',
+            valid,
+        });
+        console.log('result', valid);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(result),
+            Data: new TextEncoder().encode(responsePayload),
         }));
 
         console.log('Success');
-        return createSuccessResponse(result);
+        return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
         console.log('Error', err);
         return createErrorResponse(err);
@@ -48,9 +57,6 @@ export const webSocketHandler = async (
 
 const handler = async (
     payload: HandlerPayload,
-): Promise<string> => {
-    if (!await playerValidator(payload.id, payload.secret)) {
-        return 'Invalid'
-    }
-    return 'Valid';
+): Promise<boolean> => {
+    return await playerValidator(payload.id, payload.secret);
 }

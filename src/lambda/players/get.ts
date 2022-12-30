@@ -24,7 +24,7 @@ export const apiHandler = async (
     try {
         return createSuccessResponse(
             SUCCESS_MESSAGE,
-            await handler(event.pathParameters),
+            { player: await handler(event.pathParameters) },
         );
     } catch(err) {
         return createErrorResponse(err);
@@ -40,18 +40,22 @@ export const webSocketHandler = async (
         const player = await handler(JSON.parse(event.body!).payload);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(JSON.stringify(player)),
+            Data: new TextEncoder().encode(JSON.stringify({
+                message: 'Success',
+                action: 'getPlayer',
+                player,
+            })),
         }));
 
         console.log('Success');
-        return createSuccessResponse(SUCCESS_MESSAGE, player);
+        return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
         if (err instanceof Error) {
             await client.send(new PostToConnectionCommand({
                 ConnectionId: event.requestContext.connectionId,
                 Data: new TextEncoder().encode(JSON.stringify({
-                    error: 'PLAYER_NOT_FOUND',
-                    message: err.message,
+                    message: 'Player not found',
+                    action: 'getPlayer',
                 })),
           }));
         }
@@ -65,7 +69,7 @@ export const handler = async (payload: HandlerPayload,): Promise<{ username: str
     const result = await getPlayer(payload.id);
     if (result === null) {
         console.error(`Failed to find playerId: "${payload.id}"`)
-        throw new StatusError('Provided playerId does not exist.', 404);
+        throw new StatusError('Player not found', 404);
     }
     return { username: result.username };
 };

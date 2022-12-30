@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
-import { createPlayer } from '../shared/models/player';
+import { createPlayer, PlayerResult } from '../shared/models/player';
 import {
     createErrorResponse,
     createSuccessResponse,
@@ -19,7 +19,7 @@ export const apiHandler = async (
     try {
         return createSuccessResponse(
             SUCCESS_MESSAGE,
-            await handler(JSON.parse(event.body!)),
+            { player: await handler(JSON.parse(event.body!)) },
         );
     } catch(err) {
         return createErrorResponse(err);
@@ -32,25 +32,23 @@ export const webSocketHandler = async (
     const client = retrieveClient(event.requestContext);
 
     try {
-        const result = await handler(JSON.parse(event.body!).payload);
+        const player = await handler(JSON.parse(event.body!).payload);
+        const responsePayload = {
+            message: 'Success',
+            action: 'createPlayer',
+            player,
+        };
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(JSON.stringify(result)),
+            Data: new TextEncoder().encode(JSON.stringify(responsePayload)),
         }));
 
-        return createSuccessResponse(SUCCESS_MESSAGE, result);
+        return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
         return createErrorResponse(err);
     }
 };
 
-const handler = async (payload: HandlerPayload): Promise<{
-    playerId: string;
-    playerSecret: string;
-}> => {
-    const result = await createPlayer(payload.username)
-    return {
-        playerId: result.id,
-        playerSecret: result.secret,
-    };
+const handler = async (payload: HandlerPayload): Promise<PlayerResult> => {
+    return await createPlayer(payload.username)
 };

@@ -4,11 +4,11 @@ import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 const PLAYER_TABLE_NAME = process.env.PLAYER_TABLE_NAME;
 
-export interface PlayerResult {
+export type PlayerResult = {
     id: string;
     secret: string;
     username: string;
-}
+};
 
 export const createPlayer = async (
     username: string
