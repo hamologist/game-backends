@@ -6,12 +6,12 @@ import {
 } from '../shared/utilities/response-helpers';
 import { makeMove } from '../shared/services/game-state-mutator';
 import {
-    ApiGatewayManagementApiClient,
     PostToConnectionCommand
 } from '@aws-sdk/client-apigatewaymanagementapi';
 import { GameStateResult } from '../shared/models/game-state';
 import { TextEncoder } from 'util';
 import { getObservable } from '../shared/models/observable';
+import { retrieveClient } from '../shared/clients/api-gateway-management-api-client';
 
 interface HandlerPayload {
     id: string;
@@ -42,9 +42,7 @@ export const webSocketHandler = async (
         console.error('Missing connection id');
     }
 
-    const client = new ApiGatewayManagementApiClient({
-        endpoint: `https://${event.requestContext.domainName}/${event.requestContext.stage}`,
-    });
+    const client = retrieveClient(event.requestContext);
 
     try {
         const result = await handler(JSON.parse(event.body!).payload);

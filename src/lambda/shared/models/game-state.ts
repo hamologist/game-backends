@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Board, Players, SessionStates, SquareStates } from '../types/game-state';
-import { documentClient } from './document-client';
+import { documentClient } from '../clients/document-client';
 import { GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb'
 
 const GAME_STATE_TABLE_NAME = process.env.GAME_STATE_TABLE_NAME;

@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'crypto';
-import { documentClient } from './document-client';
+import { documentClient } from '../clients/document-client';
 import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 const PLAYER_TABLE_NAME = process.env.PLAYER_TABLE_NAME;

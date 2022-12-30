@@ -1,4 +1,4 @@
-import { documentClient } from './document-client';
+import { documentClient } from '../clients/document-client';
 import { DeleteCommand, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 const CONNECTION_TABLE_NAME = process.env.CONNECTION_TABLE_NAME;

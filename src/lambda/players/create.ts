@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
+import { PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import { createPlayer } from '../shared/models/player';
 import {
     createErrorResponse,
@@ -7,6 +7,7 @@ import {
     SUCCESS_MESSAGE
 } from '../shared/utilities/response-helpers';
 import { TextEncoder } from 'util';
+import { retrieveClient } from '../shared/clients/api-gateway-management-api-client';
 
 interface HandlerPayload {
     username: string;
@@ -28,9 +29,7 @@ export const apiHandler = async (
 export const webSocketHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-    const client = new ApiGatewayManagementApiClient({
-        endpoint: `https://${event.requestContext.domainName}/${event.requestContext.stage}`,
-    });
+    const client = retrieveClient(event.requestContext);
 
     try {
         const result = await handler(JSON.parse(event.body!).payload);
