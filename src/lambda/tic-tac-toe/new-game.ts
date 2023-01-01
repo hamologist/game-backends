@@ -22,10 +22,16 @@ interface HandlerPayload {
 export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+    // TODO: PlayerOne's websocket connection should be alerted (if existing) when using this codepath.
+
     try {
         return createSuccessResponse(
             SUCCESS_MESSAGE,
-            await handler(JSON.parse(event.body!))
+            {
+                gameState: {
+                    id: await handler(JSON.parse(event.body!)),
+                },
+            },
         );
     } catch(err) {
         return createErrorResponse(err);
@@ -47,7 +53,11 @@ export const webSocketHandler = async (
         await addObservablesToConnection(event.requestContext.connectionId, [result.gameStateId])
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(JSON.stringify(result)),
+            Data: new TextEncoder().encode(JSON.stringify({
+                message: 'Update',
+                action: 'newGameTicTacToe',
+                gameState: { id: result.gameStateId }
+            })),
         }));
 
         return createSuccessResponse(SUCCESS_MESSAGE, result);

@@ -63,7 +63,7 @@ export class TicTacToeMakeMove extends Construct {
         });
         props.webSocketContext.observableTable.grantReadData(this.makeMoveHandler);
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.makeMoveHandler);
-        props.playersContext.playerTable.grantReadData(this.makeMoveHandler);
+        props.playersContext.playerTable.grantReadWriteData(this.makeMoveHandler);
 
         const ticTacToeMakeMoveRoute = props.webSocketContext.api.addRoute('makeMoveTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeMakeMoveWebSocketIntegration', this.makeMoveHandler),

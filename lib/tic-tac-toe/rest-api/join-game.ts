@@ -24,7 +24,7 @@ export class TicTacToeJoinGame extends Construct {
             functionName: 'TicTacToeJoinGameRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.joinGameHandler);
-        props.playersContext.playerTable.grantReadData(this.joinGameHandler);
+        props.playersContext.playerTable.grantReadWriteData(this.joinGameHandler);
 
         const joinGameTicTacToeRequestModel = props.buildContext.restApi.addModel('JoinGameModel', {
             contentType: 'application/json',

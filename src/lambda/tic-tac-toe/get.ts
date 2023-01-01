@@ -21,9 +21,10 @@ export const apiHandler = async (
     }
 ): Promise<APIGatewayProxyResult> => {
     try {
+        const result = await handler(event.pathParameters);
         return createSuccessResponse(
             SUCCESS_MESSAGE,
-            await handler(event.pathParameters)
+            { gameState: result.gameState },
         );
     } catch (err) {
         return createErrorResponse(err);
@@ -36,15 +37,29 @@ export const webSocketHandler = async(
     const client = retrieveClient(event.requestContext);
 
     try {
-        const gameState = await handler(JSON.parse(event.body!).payload);
+        const result = await handler(JSON.parse(event.body!).payload);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(JSON.stringify(gameState)),
+            Data: new TextEncoder().encode(JSON.stringify({
+                message: 'Update',
+                action: 'getTicTacToe',
+                gameState: result.gameState
+            })),
         }));
 
-        console.log('Success');
-        return createSuccessResponse(SUCCESS_MESSAGE, gameState);
+        console.log(SUCCESS_MESSAGE);
+        return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
+        if (err instanceof Error) {
+            await client.send(new PostToConnectionCommand({
+                ConnectionId: event.requestContext.connectionId,
+                Data: new TextEncoder().encode(JSON.stringify({
+                    message: 'Error: Game state not found',
+                    action: 'getTicTacToe',
+                })),
+            }));
+        }
+
         console.log('Error', err);
         return createErrorResponse(err);
     }

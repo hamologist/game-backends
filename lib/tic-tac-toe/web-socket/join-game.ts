@@ -57,7 +57,7 @@ export class TicTacToeJoinGame extends Construct {
         props.webSocketContext.observableTable.grantReadWriteData(this.joinGameHandler);
         props.webSocketContext.connectionTable.grantReadWriteData(this.joinGameHandler);
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.joinGameHandler);
-        props.playersContext.playerTable.grantReadData(this.joinGameHandler);
+        props.playersContext.playerTable.grantReadWriteData(this.joinGameHandler);
 
         const ticTacToeJoinGameRoute = props.webSocketContext.api.addRoute('joinGameTicTacToe', {
             integration: new WebSocketLambdaIntegration('TicTacToeJoinGameWebSocketIntegration', this.joinGameHandler),

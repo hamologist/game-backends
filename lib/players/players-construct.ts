@@ -25,6 +25,7 @@ export class PlayersConstruct extends Construct {
                 type: AttributeType.STRING,
                 name: 'id',
             },
+            timeToLiveAttribute: 'expirationTime',
         });
 
         const playerResource = props.buildContext.restApi.root.addResource('player');

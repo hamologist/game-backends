@@ -11,7 +11,7 @@ import {
 import { GameStateResult } from '../shared/models/game-state';
 import { TextEncoder } from 'util';
 import { addObservablesToConnection } from '../shared/models/connection';
-import { addConnectionsToObservable } from '../shared/models/observable';
+import { addConnectionsToObservable, getObservable } from '../shared/models/observable';
 import { retrieveClient } from '../shared/clients/api-gateway-management-api-client';
 
 interface HandlerPayload {
@@ -28,7 +28,7 @@ export const apiHandler = async (
     try {
         return createSuccessResponse(
             SUCCESS_MESSAGE,
-            await handler(JSON.parse(event.body!))
+            { gameState: await handler(JSON.parse(event.body!)) },
         );
     } catch(err) {
         return createErrorResponse(err);
@@ -48,13 +48,39 @@ export const webSocketHandler = async (
         const result = await handler(JSON.parse(event.body!).payload);
         await addObservablesToConnection(event.requestContext.connectionId, [result.gameState.id]);
         await addConnectionsToObservable(result.gameState.id, [event.requestContext.connectionId]);
-        await client.send(new PostToConnectionCommand({
-            ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(JSON.stringify(result)),
-        }));
 
-        return createSuccessResponse(SUCCESS_MESSAGE, result);
+        const observable = await getObservable(result.gameState.id);
+
+        if (observable?.connectionIds) {
+            const payload = new TextEncoder().encode(JSON.stringify({
+                message: 'Update',
+                action: 'joinGameTicTacToe',
+                gameState: result.gameState
+            }));
+            for (const connectionId of observable.connectionIds) {
+                try {
+                    await client.send(new PostToConnectionCommand({
+                        ConnectionId: connectionId,
+                        Data: payload,
+                    }));
+                } catch (err) {
+                    console.error(`Failed to alert ConnectionId: "${connectionId}" of joinGameTicTacToe Update`);
+                }
+            }
+        }
+
+        return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
+        if (err instanceof Error) {
+            await client.send(new PostToConnectionCommand({
+                ConnectionId: event.requestContext.connectionId,
+                Data: new TextEncoder().encode(JSON.stringify({
+                    message: 'Error: Failed to join game',
+                    action: 'joinGameTicTacToe',
+                })),
+            }));
+        }
+
         console.log('Error', err);
         return createErrorResponse(err);
     }

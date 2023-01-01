@@ -27,7 +27,7 @@ export const handler = async (
     for (const record of event.Records) {
         switch (record.eventName) {
             case "REMOVE":
-                processRemoveEvent(record);
+                await processRemoveEvent(record);
         }
     }
 };

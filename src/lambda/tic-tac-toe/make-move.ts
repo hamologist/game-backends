@@ -25,10 +25,12 @@ interface HandlerPayload {
 export const apiHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+    // TODO: Websocket connections should be updated when using this codepath as well
     try {
+        const result = await handler(JSON.parse(event.body!));
         return createSuccessResponse(
             SUCCESS_MESSAGE,
-            await handler(JSON.parse(event.body!))
+            { gameState: result.gameState },
         );
     } catch (err) {
         return createErrorResponse(err);
@@ -49,21 +51,32 @@ export const webSocketHandler = async (
         const observable = await getObservable(result.gameState.id);
 
         if (observable?.connectionIds) {
-            const payload = new TextEncoder().encode(JSON.stringify(result.gameState));
+            const payload = new TextEncoder().encode(JSON.stringify({
+                message: 'Update',
+                action: 'makeMoveTicTacToe',
+                gameState: result.gameState
+            }));
             for (const connectionId of observable.connectionIds) {
-                await client.send(new PostToConnectionCommand({
-                    ConnectionId: connectionId,
-                    Data: payload,
-                }));
+                try {
+                    await client.send(new PostToConnectionCommand({
+                        ConnectionId: connectionId,
+                        Data: payload,
+                    }));
+                } catch (err) {
+                    console.error(`Failed to alert ConnectionId: "${connectionId}" of makeMoveTicTacToe Update`);
+                }
             }
         }
 
-        return createSuccessResponse(SUCCESS_MESSAGE, result);
+        return createSuccessResponse(SUCCESS_MESSAGE);
     } catch (err: any) {
         console.error('Error', err);
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
-            Data: new TextEncoder().encode(JSON.stringify(err.toString()))
+            Data: new TextEncoder().encode(JSON.stringify({
+                message: 'Error: failed to process move',
+                action: 'makeMoveTicTacToe',
+            }))
         }));
 
         return createErrorResponse(err);

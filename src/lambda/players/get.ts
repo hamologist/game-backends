@@ -41,23 +41,23 @@ export const webSocketHandler = async (
         await client.send(new PostToConnectionCommand({
             ConnectionId: event.requestContext.connectionId,
             Data: new TextEncoder().encode(JSON.stringify({
-                message: 'Success',
+                message: 'Update',
                 action: 'getPlayer',
                 player,
             })),
         }));
 
-        console.log('Success');
+        console.log(SUCCESS_MESSAGE);
         return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
         if (err instanceof Error) {
             await client.send(new PostToConnectionCommand({
                 ConnectionId: event.requestContext.connectionId,
                 Data: new TextEncoder().encode(JSON.stringify({
-                    message: 'Player not found',
+                    message: 'Error: Player not found',
                     action: 'getPlayer',
                 })),
-          }));
+            }));
         }
 
         console.log('Error', err);

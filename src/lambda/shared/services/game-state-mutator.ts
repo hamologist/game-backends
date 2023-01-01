@@ -8,6 +8,7 @@ import {
 import { playerValidator } from './player-validator';
 import { processPlayerMove } from '../../tic-tac-toe/services/process-player-move';
 import { Players, SessionStates, SquareStates } from '../types/game-state';
+import { updatePlayerExpirationTime } from '../models/player';
 
 export const createGame = async (
     playerId: string,
@@ -17,7 +18,10 @@ export const createGame = async (
         throw new Error('Invalid player provided');
     }
 
-    return _createGame(playerId);
+    const result = await _createGame(playerId);
+    await updatePlayerExpirationTime(playerId);
+
+    return result;
 };
 
 export const joinGame = async (
@@ -33,7 +37,10 @@ export const joinGame = async (
         throw new Error('Game doesn\'t exist');
     }
 
-    return addPlayer(gameStateId, playerId);
+    const result = await addPlayer(gameStateId, playerId);
+    await updatePlayerExpirationTime(playerId);
+
+    return result;
 };
 
 export const makeMove = async (
@@ -72,5 +79,8 @@ export const makeMove = async (
     }
 
     processPlayerMove({ x, y }, gameState.state);
-    return updateState(gameStateId, gameState.state);
+    const result = await updateState(gameStateId, gameState.state);
+    updatePlayerExpirationTime(playerId);
+
+    return result;
 };

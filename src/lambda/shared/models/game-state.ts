@@ -71,7 +71,7 @@ export const createGame = async (
                 playerOne: playerId,
                 playerTwo: null,
                 state: gameState,
-                expirationTime: (Date.now() / 1000) + (60 * 60),
+                expirationTime: (Math.floor(Date.now() / 1000)) + (60 * 60),
             },
         })
     )
@@ -92,9 +92,10 @@ export const addPlayer = async (
         new UpdateCommand({
             TableName: GAME_STATE_TABLE_NAME,
             Key: { id: gameStateId },
-            UpdateExpression: 'set playerTwo = :p',
+            UpdateExpression: 'set playerTwo = :p, expirationTime = :e',
             ExpressionAttributeValues: {
-                ':p': playerId
+                ':p': playerId,
+                ':e': (Math.floor(Date.now() / 1000)) + (60 * 60),
             },
             ReturnValues: 'ALL_NEW',
         })
@@ -111,12 +112,13 @@ export const updateState = async (
         new UpdateCommand({
             TableName: GAME_STATE_TABLE_NAME,
             Key: { id: gameStateId },
-            UpdateExpression: 'set #s = :s',
+            UpdateExpression: 'set #s = :s, expirationTime = :e',
             ExpressionAttributeNames: {
                 '#s': 'state',
             },
             ExpressionAttributeValues: {
-                ':s': state
+                ':s': state,
+                ':e': (Math.floor(Date.now() / 1000)) + (60 * 60),
             },
             ReturnValues: 'ALL_NEW',
         })

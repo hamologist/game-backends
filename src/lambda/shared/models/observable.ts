@@ -108,7 +108,7 @@ export const deleteObservable = async(
             new DeleteCommand({
                 TableName: OBSERVABLE_TABLE_NAME,
                 Key: {
-                    observableId,
+                    observableId: observableId,
                 },
             }),
         );

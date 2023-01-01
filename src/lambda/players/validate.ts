@@ -37,7 +37,7 @@ export const webSocketHandler = async (
     try {
         const valid = await handler(JSON.parse(event.body!).payload);
         const responsePayload = JSON.stringify({
-            message: 'Success',
+            message: 'Update',
             action: 'validatePlayer',
             valid,
         });
@@ -47,7 +47,7 @@ export const webSocketHandler = async (
             Data: new TextEncoder().encode(responsePayload),
         }));
 
-        console.log('Success');
+        console.log(SUCCESS_MESSAGE);
         return createSuccessResponse(SUCCESS_MESSAGE);
     } catch(err) {
         console.log('Error', err);

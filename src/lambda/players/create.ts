@@ -34,7 +34,7 @@ export const webSocketHandler = async (
     try {
         const player = await handler(JSON.parse(event.body!).payload);
         const responsePayload = {
-            message: 'Success',
+            message: 'Update',
             action: 'createPlayer',
             player,
         };

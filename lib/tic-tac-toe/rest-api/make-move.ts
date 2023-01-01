@@ -24,7 +24,7 @@ export class TicTacToeMakeMove extends Construct {
             functionName: 'TicTacToeMakeMoveRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.makeMoveHandler);
-        props.playersContext.playerTable.grantReadData(this.makeMoveHandler);
+        props.playersContext.playerTable.grantReadWriteData(this.makeMoveHandler);
 
         const makeMoveTicTacToeRequestModel = props.buildContext.restApi.addModel('MakeMoveModel', {
             contentType: 'application/json',

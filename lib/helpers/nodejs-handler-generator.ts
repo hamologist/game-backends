@@ -1,5 +1,6 @@
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
 
@@ -20,6 +21,7 @@ export class NodejsHandlerGenerator extends Construct {
                 memorySize: 256,
                 architecture: lambda.Architecture.ARM_64,
                 runtime: lambda.Runtime.NODEJS_18_X,
+                logRetention: logs.RetentionDays.ONE_DAY,
             },
             ...props.defaultLambdaGeneratorProps,
         };

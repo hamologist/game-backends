@@ -24,7 +24,7 @@ export class TicTacToeNewGame extends Construct {
             functionName: 'TicTacToeNewGameRestHandler',
         });
         props.ticTacToeContext.gameStateTable.grantReadWriteData(this.newGameHandler);
-        props.playersContext.playerTable.grantReadData(this.newGameHandler);
+        props.playersContext.playerTable.grantReadWriteData(this.newGameHandler);
 
         const newGameTicTacToeRequestModel = props.buildContext.restApi.addModel('NewGameModel', {
             contentType: 'application/json',
