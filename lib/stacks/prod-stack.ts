@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
@@ -9,6 +9,7 @@ import { BuildContext } from '../helpers/build-context';
 import { Stage, StageContext } from '../helpers/stage-context';
 import { RestApiGenerator } from '../helpers/rest-api-generator';
 import { TableGenerator } from '../helpers/table-generator';
+import * as apigatewayv2 from '@aws-cdk/aws-apigatewayv2-alpha';
 
 export class ProdStack extends Stack {
   public readonly buildContext: BuildContext;
@@ -55,5 +56,29 @@ export class ProdStack extends Stack {
           new route53Targets.ApiGateway(this.buildContext.restApi),
       ),
     });
+
+    const webSocketStage = new apigatewayv2.WebSocketStage(this, 'DevStage', {
+        webSocketApi: this.gameBackends.webSocketApi.api,
+        stageName: this.buildContext.stageContext.stageToString(),
+        autoDeploy: true,
+    });
+    const webSocketDomainName = new apigatewayv2.DomainName(this, 'WebSocketDomainName', {
+      certificate,
+      domainName: `game-backends-ws.${rootDomain}`,
+    });
+    const webSocketApiMapping = new apigatewayv2.ApiMapping(this, 'WebSocketApiMapping', {
+      api: this.gameBackends.webSocketApi.api,
+      domainName: webSocketDomainName,
+      stage: webSocketStage,
+    });
+    webSocketApiMapping.node.addDependency(webSocketDomainName);
+    new route53.CnameRecord(this, 'WebSocketApiDNS', {
+      recordName: `game-backends-ws.${rootDomain}`,
+      zone,
+      domainName: webSocketDomainName.regionalDomainName,
+    });
+
+    new CfnOutput(this, 'ApiUrl', { value: this.buildContext.restApi.url });
+    new CfnOutput(this, 'WebSocketApiUrl', { value: webSocketStage.url });
   }
 }

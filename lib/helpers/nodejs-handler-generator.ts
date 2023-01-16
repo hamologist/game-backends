@@ -3,16 +3,19 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
+import { StageContext } from './stage-context';
 
 export interface NodejsHandlerGeneratorProps {
     defaultLambdaGeneratorProps?: Omit<nodejs.NodejsFunctionProps, 'handler' | 'runtime'>;
+    stageContext: StageContext;
 }
 
 export class NodejsHandlerGenerator extends Construct {
     protected scope: Construct;
     protected defaultLambdaGeneratorProps: Omit<nodejs.NodejsFunctionProps, 'handler'>;
+    protected stageContext: StageContext;
 
-    public constructor(scope: Construct, id: string, props: NodejsHandlerGeneratorProps = {}) {
+    public constructor(scope: Construct, id: string, props: NodejsHandlerGeneratorProps) {
         super(scope, id);
 
         this.defaultLambdaGeneratorProps = {
@@ -25,6 +28,7 @@ export class NodejsHandlerGenerator extends Construct {
             },
             ...props.defaultLambdaGeneratorProps,
         };
+        this.stageContext = props.stageContext;
     }
 
     public generate(
@@ -33,6 +37,11 @@ export class NodejsHandlerGenerator extends Construct {
             runtime?: nodejs.NodejsFunctionProps["runtime"],
         } & Omit<nodejs.NodejsFunctionProps, "runtime">
     ): lambda.Function {
+        props = {
+            ...props,
+            functionName: `${this.stageContext.stage}-${props.functionName}`,
+        };
+
         return new nodejs.NodejsFunction(this, id, {
             ...this.defaultLambdaGeneratorProps,
             ...props,

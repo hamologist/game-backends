@@ -52,6 +52,7 @@ export class TicTacToeConstruct extends Construct {
                     PLAYER_TABLE_NAME: props.playersContext.playerTable.tableName,
                 },
             },
+            stageContext: props.buildContext.stageContext,
         });
 
         const ticTacToeResource = props.buildContext.restApi.root.addResource('tic-tac-toe');

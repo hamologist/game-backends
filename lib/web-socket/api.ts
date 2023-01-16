@@ -64,6 +64,7 @@ export class WebSocketApi extends Construct {
                     GAME_STATE_TABLE_NAME: props.ticTacToeContext.gameStateTable.tableName,
                 },
             },
+            stageContext: props.buildContext.stageContext,
         });
 
         this.gameStateCleanupHandler = webSocketHandlerGenerator.generate('GameStateCleanupHandler', {

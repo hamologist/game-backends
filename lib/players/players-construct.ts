@@ -37,6 +37,7 @@ export class PlayersConstruct extends Construct {
                     PLAYER_TABLE_NAME: playerTable.tableName,
                 },
             },
+            stageContext: props.buildContext.stageContext,
         });
 
         this.playersContext = {
